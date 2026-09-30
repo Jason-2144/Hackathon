@@ -10,7 +10,6 @@ import {
   ResearchItem
 } from '../../types/polar';
 import {
-  Sparkles,
   FileText,
   CheckCircle,
   Clock,
@@ -18,9 +17,6 @@ import {
   Share2,
   Copy,
   ExternalLink,
-  RotateCcw,
-  Sliders,
-  Eye,
   Edit3,
   BookmarkCheck,
   ShieldCheck,
@@ -28,7 +24,9 @@ import {
   Image as ImageIcon,
   Database,
   ArrowRight,
-  AlertCircle
+  Sparkles,
+  Save,
+  RotateCcw
 } from 'lucide-react';
 
 interface ContentStudioViewProps {
@@ -57,13 +55,10 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
     prefillSourceId || reports[0]?.id || ''
   );
 
-  // 2. Output Formats Selection Checkboxes (Per Requirement 4)
-  const [selectedFormats, setSelectedFormats] = useState<OutreachFormat[]>([
-    'website_article',
-    'instagram_post',
-    'linkedin_post',
-    'video_script',
-  ]);
+  // 2. Output Formats Selection Checkboxes (Per Prompt Specification)
+  const [selectedFormat, setSelectedFormat] = useState<
+    'Website Article' | 'Public Article' | 'Student Explanation' | 'Social Post' | 'Video Script' | 'Infographic Content'
+  >('Website Article');
 
   // 3. Media & Dataset Attachments
   const [attachedMediaIds, setAttachedMediaIds] = useState<string[]>(['med-bharati-life']);
@@ -98,32 +93,31 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
     }
   }, [prefillSourceId, prefillSourceType]);
 
-  // Format selection toggle
-  const toggleFormat = (fmt: OutreachFormat) => {
-    if (selectedFormats.includes(fmt)) {
-      if (selectedFormats.length > 1) {
-        setSelectedFormats(selectedFormats.filter((f) => f !== fmt));
-      }
-    } else {
-      setSelectedFormats([...selectedFormats, fmt]);
-    }
-  };
-
-  // Run AI Generation
+  // Run Generation
   const handleGenerateContent = async () => {
     setIsGenerating(true);
     try {
+      const formatMapping: Record<string, OutreachFormat[]> = {
+        'Website Article': ['website_article'],
+        'Public Article': ['website_article'],
+        'Student Explanation': ['website_article'],
+        'Social Post': ['instagram_post', 'linkedin_post'],
+        'Video Script': ['video_script'],
+        'Infographic Content': ['website_article'],
+      };
+
       const newItems = await generateContentStudioPackage({
         sourceId: selectedSourceId,
         sourceType,
-        formats: selectedFormats,
+        formats: formatMapping[selectedFormat] || ['website_article'],
         attachedMediaIds,
         attachedDatasetId,
       });
 
       // Save to repository
       newItems.forEach((item) => PolarRepository.addOutreachItem(item));
-      setGeneratedItems([...newItems, ...PolarRepository.getOutreachItems()]);
+      const updated = PolarRepository.getOutreachItems();
+      setGeneratedItems(updated);
       setActiveItemId(newItems[0].id);
     } catch (err) {
       console.error('Error in content generation:', err);
@@ -132,7 +126,7 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
     }
   };
 
-  // Review Status Workflow Transitions (Requirement 6)
+  // Review Status Workflow Transitions (DRAFT -> REVIEW -> APPROVED -> PUBLISHED)
   const handleStatusChange = (newStatus: ReviewStatus) => {
     if (!activeItem) return;
     const channels =
@@ -141,9 +135,7 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
         : activeItem.publishedChannels;
 
     PolarRepository.updateOutreachStatus(activeItem.id, newStatus, reviewNotesInput, channels);
-    // Refresh local list
-    const updated = PolarRepository.getOutreachItems();
-    setGeneratedItems(updated);
+    setGeneratedItems(PolarRepository.getOutreachItems());
   };
 
   const handleSaveEdits = () => {
@@ -163,53 +155,78 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
   // Resolve source item details
   const currentSourceReport = reports.find((r) => r.id === selectedSourceId);
   const currentSourceResearch = research.find((r) => r.id === selectedSourceId);
+  const currentSourceDataset = datasets.find((d) => d.id === selectedSourceId);
+  const currentSourceExp = expeditions.find((e) => e.id === selectedSourceId);
+
+  const sourceTitle =
+    currentSourceReport?.title ||
+    currentSourceResearch?.title ||
+    currentSourceDataset?.title ||
+    currentSourceExp?.name ||
+    'MoES Polar Science Asset';
+
+  const sourceIdentifier =
+    currentSourceReport?.reportNumber ||
+    currentSourceResearch?.doi ||
+    currentSourceDataset?.fileFormat ||
+    currentSourceExp?.id ||
+    'REF-POLARIS-01';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      {/* 1. Newsroom Header */}
+      <div className="border-b border-slate-300 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase mb-1">
-            <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-            <span>AI Science-to-Outreach Generation & Dissemination Engine</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#003366]">
+            Ministry of Earth Sciences · Editorial Newsroom
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#002244] tracking-tight mt-1">
             POLARIS Content Studio
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
-            Transform expedition field logs, publications, and raw sensor datasets into website articles, student curriculum, and verified social media dissemination with complete source traceability.
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-3xl leading-relaxed">
+            Editorial workspace translating complex expedition reports, peer-reviewed publications, and raw telemetry into verified website articles, school curriculum, and public media dissemination.
           </p>
         </div>
 
-        {/* Quick Review Workflow Legend */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded text-[10px] font-mono">
-          <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400">Draft</span>
-          <span className="text-slate-600">→</span>
-          <span className="px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/60">Review</span>
-          <span className="text-slate-600">→</span>
-          <span className="px-2 py-0.5 rounded bg-sky-950/60 text-sky-300 border border-sky-800/60">Approved</span>
-          <span className="text-slate-600">→</span>
-          <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-medium">Published</span>
+        {/* 4-Stage Workflow Indicator (PER PROMPT SPECIFICATION) */}
+        <div className="flex items-center gap-1 border border-slate-300 bg-white p-1 text-[11px] font-mono self-start md:self-auto">
+          <span className="text-slate-500 px-1 uppercase text-[10px]">Workflow:</span>
+          <span className={`px-2 py-0.5 ${activeItem?.reviewStatus === 'draft' ? 'bg-[#002244] text-white font-bold' : 'text-slate-600'}`}>
+            DRAFT
+          </span>
+          <span className="text-slate-400">→</span>
+          <span className={`px-2 py-0.5 ${activeItem?.reviewStatus === 'under_review' || activeItem?.reviewStatus === 'ai_generated' ? 'bg-amber-600 text-white font-bold' : 'text-slate-600'}`}>
+            REVIEW
+          </span>
+          <span className="text-slate-400">→</span>
+          <span className={`px-2 py-0.5 ${activeItem?.reviewStatus === 'approved' ? 'bg-blue-700 text-white font-bold' : 'text-slate-600'}`}>
+            APPROVED
+          </span>
+          <span className="text-slate-400">→</span>
+          <span className={`px-2 py-0.5 ${activeItem?.reviewStatus === 'published' ? 'bg-emerald-700 text-white font-bold' : 'text-slate-600'}`}>
+            PUBLISHED
+          </span>
         </div>
       </div>
 
-      {/* Main 3-Column Studio Layout */}
+      {/* 2. Three-Column Newsroom Layout: LEFT (SOURCE) · MIDDLE (GENERATE) · RIGHT (OUTPUT) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* COLUMN 1 (LEFT): Source Material & Attachments */}
-        <div className="lg:col-span-4 bg-[#0b101d] border border-slate-800 rounded-lg p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <span className="text-xs font-mono uppercase text-slate-300 font-semibold">
-              1. Source Selection
-            </span>
-            <span className="text-[10px] text-slate-400 font-mono">Primary Material</span>
+        {/* ========================================================
+            COLUMN 1 (LEFT): SOURCE
+            ======================================================== */}
+        <div className="lg:col-span-3 border border-slate-300 bg-white p-4 space-y-4">
+          <div className="border-b border-slate-300 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider font-mono text-[#002244]">
+              1. Source Material
+            </h2>
           </div>
 
           {/* Source Type Selector */}
-          <div className="space-y-1.5">
-            <label className="block text-[11px] font-mono text-slate-400 uppercase">
+          <div className="space-y-1">
+            <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
               Source Category:
             </label>
-            <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
+            <div className="grid grid-cols-2 gap-1 text-xs">
               {(['Expedition Report', 'Publication', 'Dataset', 'Expedition'] as const).map((t) => (
                 <button
                   key={t}
@@ -220,10 +237,10 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
                     else if (t === 'Dataset') setSelectedSourceId(datasets[0]?.id);
                     else setSelectedSourceId(expeditions[0]?.id);
                   }}
-                  className={`px-2.5 py-1.5 rounded border text-left truncate cursor-pointer transition-colors ${
+                  className={`px-2 py-1.5 border text-left truncate cursor-pointer transition-colors text-xs ${
                     sourceType === t
-                      ? 'bg-slate-800 border-slate-700 text-white font-semibold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-[#002244] text-white border-[#001730] font-semibold'
+                      : 'bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   {t}
@@ -232,401 +249,379 @@ export const ContentStudioView: React.FC<ContentStudioViewProps> = ({
             </div>
           </div>
 
-          {/* Specific Source Dropdown */}
-          <div className="space-y-1.5">
-            <label className="block text-[11px] font-mono text-slate-400 uppercase">
-              Choose Document / Record:
+          {/* Specific Document Select */}
+          <div className="space-y-1">
+            <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+              Select Record:
             </label>
             <select
               value={selectedSourceId}
               onChange={(e) => setSelectedSourceId(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded text-xs text-slate-200 focus:outline-none focus:border-sky-500 cursor-pointer"
+              className="w-full p-2 border border-slate-300 bg-white text-xs text-slate-900 focus:outline-none cursor-pointer"
             >
               {sourceType === 'Expedition Report' &&
                 reports.map((r) => (
                   <option key={r.id} value={r.id}>
-                    [{r.reportNumber}] {r.title.slice(0, 45)}...
+                    [{r.reportNumber}] {r.title.slice(0, 36)}...
                   </option>
                 ))}
               {sourceType === 'Publication' &&
                 research.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.title.slice(0, 48)}... ({p.year})
+                    [{p.doi}] {p.title.slice(0, 36)}...
                   </option>
                 ))}
               {sourceType === 'Dataset' &&
                 datasets.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.title.slice(0, 48)}...
+                    [{d.fileFormat}] {d.title.slice(0, 36)}...
                   </option>
                 ))}
               {sourceType === 'Expedition' &&
                 expeditions.map((e) => (
                   <option key={e.id} value={e.id}>
-                    {e.name}
+                    {e.name.slice(0, 40)}
                   </option>
                 ))}
             </select>
           </div>
 
-          {/* Selected Source Summary Card */}
-          <div className="p-3 bg-slate-900 border border-slate-800 rounded space-y-1 text-xs">
-            <div className="text-[10px] font-mono text-slate-400 uppercase">Selected Source:</div>
-            <div className="font-semibold text-white leading-tight">
-              {currentSourceReport?.title || currentSourceResearch?.title || 'Selected Polar Science Material'}
+          {/* Source Document Details Box */}
+          <div className="p-3 bg-slate-50 border border-slate-300 space-y-2 text-xs">
+            <div className="font-semibold text-slate-900 leading-snug">
+              {sourceTitle}
             </div>
-            <div className="text-[11px] text-slate-400 font-mono">
-              Institution: {currentSourceReport?.institution || currentSourceResearch?.institution || 'Ministry of Earth Sciences (MoES)'}
+            <div className="text-[11px] font-mono text-[#004c99]">
+              ID / DOI: {sourceIdentifier}
+            </div>
+            <div className="text-[11px] text-slate-600 line-clamp-3 leading-relaxed">
+              {currentSourceReport?.summary ||
+                currentSourceResearch?.abstract ||
+                currentSourceDataset?.description ||
+                currentSourceExp?.objective}
+            </div>
+            <div className="pt-2 border-t border-slate-200 text-[10px] font-mono text-slate-500">
+              Institution: {currentSourceReport?.institution || 'NCPOR / MoES India'}
             </div>
           </div>
 
-          {/* Output Formats Checklist */}
-          <div className="space-y-2 pt-2 border-t border-slate-800">
-            <label className="block text-[11px] font-mono text-slate-300 uppercase font-semibold">
-              2. Select Desired Output Formats:
+          {/* Attached Field Media */}
+          <div className="space-y-1.5 pt-1">
+            <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+              Attached Field Media:
             </label>
-            <div className="space-y-1.5 text-xs">
+            <div className="space-y-1">
+              {allMedia.slice(0, 2).map((m) => {
+                const isSelected = attachedMediaIds.includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      if (isSelected) {
+                        setAttachedMediaIds(attachedMediaIds.filter((id) => id !== m.id));
+                      } else {
+                        setAttachedMediaIds([...attachedMediaIds, m.id]);
+                      }
+                    }}
+                    className={`w-full p-2 text-left border flex items-center gap-2 cursor-pointer text-xs ${
+                      isSelected
+                        ? 'bg-blue-50 border-blue-300 text-slate-900'
+                        : 'bg-white border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <input type="checkbox" checked={isSelected} readOnly className="pointer-events-none" />
+                    <span className="truncate flex-1">{m.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================
+            COLUMN 2 (MIDDLE): GENERATE & NORMAL DOCUMENT EDITOR
+            ======================================================== */}
+        <div className="lg:col-span-6 border border-slate-300 bg-white p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-300 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider font-mono text-[#002244]">
+              2. Generate & Editorial Document Editor
+            </h2>
+            <span className="text-[11px] font-mono text-slate-500">
+              Normal Document View (No AI Chat)
+            </span>
+          </div>
+
+          {/* Format Selector Buttons (PER PROMPT SPECIFICATION) */}
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+              Select Output Format:
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-xs font-mono">
               {[
-                { id: 'website_article', label: 'Website Feature Article' },
-                { id: 'public_article', label: 'Public Science Narrative' },
-                { id: 'student_explanation', label: 'Student-Friendly Explanation' },
-                { id: 'instagram_post', label: 'Instagram Visual Post' },
-                { id: 'linkedin_post', label: 'LinkedIn Professional Update' },
-                { id: 'x_post', label: 'X / Twitter Outreach Thread' },
-                { id: 'youtube_description', label: 'YouTube Video Description' },
-                { id: 'video_script', label: 'Short Video / Reel Script' },
-                { id: 'infographic_content', label: 'Infographic Content & Metrics' },
+                'Website Article',
+                'Public Article',
+                'Student Explanation',
+                'Social Post',
+                'Video Script',
+                'Infographic Content',
               ].map((fmt) => (
-                <label
-                  key={fmt.id}
-                  className="flex items-center gap-2.5 p-2 rounded bg-slate-900/60 hover:bg-slate-900 border border-slate-800/80 cursor-pointer select-none text-slate-300"
+                <button
+                  key={fmt}
+                  onClick={() => setSelectedFormat(fmt as any)}
+                  className={`p-2 border text-center cursor-pointer transition-colors text-xs ${
+                    selectedFormat === fmt
+                      ? 'bg-[#002244] text-white border-[#001730] font-semibold'
+                      : 'bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100'
+                  }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedFormats.includes(fmt.id as any)}
-                    onChange={() => toggleFormat(fmt.id as any)}
-                    className="rounded border-slate-700 text-sky-500 focus:ring-0 cursor-pointer"
-                  />
-                  <span>{fmt.label}</span>
-                </label>
+                  {fmt}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Attach Evidence & Media */}
-          <div className="space-y-2 pt-2 border-t border-slate-800">
-            <label className="block text-[11px] font-mono text-slate-300 uppercase font-semibold">
-              3. Attach Science Evidence:
-            </label>
-            <div className="space-y-2 text-xs">
-              <div>
-                <span className="text-[10px] text-slate-400 block mb-1">Attached Photographs:</span>
-                <select
-                  value={attachedMediaIds[0] || ''}
-                  onChange={(e) => setAttachedMediaIds([e.target.value])}
-                  className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-300 cursor-pointer"
-                >
-                  {allMedia.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      [{m.category}] {m.title.slice(0, 38)}...
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 block mb-1">Attached Dataset:</span>
-                <select
-                  value={attachedDatasetId}
-                  onChange={(e) => setAttachedDatasetId(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-300 cursor-pointer"
-                >
-                  {datasets.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.title.slice(0, 40)}...
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Primary Action Button */}
+          {/* Action: Generate Outreach Document */}
           <button
             onClick={handleGenerateContent}
             disabled={isGenerating}
-            className="w-full ds-btn-primary justify-center disabled:opacity-50"
+            className="w-full ds-btn-primary justify-center py-2 text-xs"
           >
             {isGenerating ? (
-              <>
-                <RotateCcw className="w-4 h-4 animate-spin" />
-                <span>Generating Outreach Content...</span>
-              </>
+              <span>Synthesizing Scientific Outreach...</span>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-slate-950" />
-                <span>GENERATE CONTENT ({selectedFormats.length} FORMATS)</span>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Generate {selectedFormat} from Source</span>
               </>
             )}
           </button>
-        </div>
 
-        {/* COLUMN 2 (CENTER): AI Processing & Generated Formats */}
-        <div className="lg:col-span-5 bg-[#0b101d] border border-slate-800 rounded-lg p-5 sm:p-6 space-y-4 shadow-xl">
-          {/* Format Switcher Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-2 border-b border-slate-800">
-            {generatedItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveItemId(item.id)}
-                className={`px-3 py-1 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                  activeItem?.id === item.id
-                    ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
-                    : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800/80'
-                }`}
-              >
-                {item.formatLabel}
-              </button>
-            ))}
-          </div>
+          {/* Normal Document Editor Box (PER USER PROMPT SPECIFICATION) */}
+          {activeItem && (
+            <div className="border border-slate-300 bg-slate-50 p-4 space-y-3">
+              {/* Document Metadata Strip: Source, Generated From, Citation, Status */}
+              <div className="p-2.5 bg-white border border-slate-300 space-y-1 text-xs font-mono text-slate-700">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-[11px]">
+                  <span><strong>Source:</strong> {activeItem.sourceTitle.slice(0, 36)}...</span>
+                  <span><strong>Status:</strong> <span className="ds-badge ds-badge-neutral">{activeItem.reviewStatus.toUpperCase()}</span></span>
+                </div>
+                <div className="text-[11px] text-slate-600">
+                  <strong>Generated From:</strong> {sourceIdentifier}
+                </div>
+                <div className="text-[11px] text-[#004c99]">
+                  <strong>Citation:</strong> MoES Polar Intelligence Archive · Ret: {activeItem.id}
+                </div>
+              </div>
 
-          {activeItem ? (
-            <div className="space-y-4">
-              {/* SOURCE TRACEABILITY BANNER */}
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded space-y-1.5 text-xs">
+              {/* Document Editor Area */}
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-slate-300 font-mono font-semibold uppercase tracking-wide text-[10px]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Scientific Source Traceability</span>
-                  </div>
+                  <label className="text-[11px] font-mono text-slate-600 uppercase font-semibold">
+                    Document Headline:
+                  </label>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    {editedContent.split(/\s+/).filter(Boolean).length} words
+                  </span>
+                </div>
+
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => {
+                    setEditedTitle(e.target.value);
+                    setIsEditing(true);
+                  }}
+                  className="w-full p-2.5 bg-white border border-slate-300 text-sm font-bold font-serif text-[#002244] focus:outline-none focus:border-[#003366]"
+                />
+
+                <label className="block text-[11px] font-mono text-slate-600 uppercase font-semibold pt-1">
+                  Document Text Body:
+                </label>
+
+                <textarea
+                  rows={14}
+                  value={editedContent}
+                  onChange={(e) => {
+                    setEditedContent(e.target.value);
+                    setIsEditing(true);
+                  }}
+                  className="w-full p-3 bg-white border border-slate-300 text-xs sm:text-sm text-slate-800 font-sans leading-relaxed focus:outline-none focus:border-[#003366] resize-y"
+                />
+              </div>
+
+              {/* Editor Bottom Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200">
+                <div className="flex items-center gap-2">
+                  {isEditing && (
+                    <button
+                      onClick={handleSaveEdits}
+                      className="ds-btn-primary text-xs"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save Document</span>
+                    </button>
+                  )}
                   <button
-                    onClick={() => onNavigate('repository')}
-                    className="text-sky-400 hover:underline text-[11px] font-mono flex items-center gap-1 cursor-pointer"
+                    onClick={handleCopyText}
+                    className="ds-btn-secondary text-xs"
                   >
-                    <span>View Primary Source</span>
-                    <ExternalLink className="w-3 h-3" />
+                    {copyFeedback ? (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-slate-600" />
+                        <span>Copy Text</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
-                <div className="text-white font-medium text-xs leading-snug">
-                  SOURCE: <span className="text-slate-300">{activeItem.sourceTitle}</span>
+                <div className="text-[11px] font-mono text-slate-500">
+                  Format: {activeItem.formatLabel}
                 </div>
-
-                <div className="text-[11px] text-slate-400 flex flex-wrap items-center gap-2 font-mono">
-                  <span>Institution: {activeItem.sourceInstitution}</span>
-                  <span aria-hidden="true" className="text-slate-600">·</span>
-                  <span>Type: {activeItem.sourceType}</span>
-                </div>
-
-                {activeItem.attachedMediaIds && activeItem.attachedMediaIds.length > 0 && (
-                  <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1 pt-0.5">
-                    <ImageIcon className="w-3 h-3 text-sky-400" />
-                    <span>Attached Evidence: {activeItem.attachedMediaIds.length} Photographs / Submersible Videos</span>
-                  </div>
-                )}
               </div>
-
-              {/* Title & Editable View */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-mono uppercase text-slate-400">
-                    Format: <span className="text-white font-semibold">{activeItem.formatLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={handleCopyText}
-                      className="px-2.5 py-1 text-xs text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded flex items-center gap-1 cursor-pointer"
-                    >
-                      {copyFeedback ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="px-2.5 py-1 text-xs text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit3 className="w-3.5 h-3.5 text-sky-400" />
-                      <span>{isEditing ? 'Cancel Edit' : 'Edit Content'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={editedTitle}
-                      onChange={(e) => setEditedTitle(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded text-sm font-bold text-white focus:outline-none focus:border-sky-500"
-                    />
-                    <textarea
-                      rows={12}
-                      value={editedContent}
-                      onChange={(e) => setEditedContent(e.target.value)}
-                      className="w-full p-4 bg-slate-900 border border-slate-800 rounded text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-sky-500"
-                    />
-                    <button
-                      onClick={handleSaveEdits}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded cursor-pointer flex items-center gap-1.5"
-                    >
-                      <BookmarkCheck className="w-4 h-4" />
-                      <span>Save Changes</span>
-                    </button>
-                  </div>
-                ) : (
-                  /* HIGH-FIDELITY PLATFORM SIMULATOR PREVIEW */
-                  <div className="space-y-3 bg-slate-900/90 p-5 rounded border border-slate-800">
-                    {/* Platform Badge Indicator */}
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px] font-mono text-slate-400">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-sky-400" />
-                        <span>Channel Preview: {activeItem.formatLabel}</span>
-                      </div>
-                      <span>Simulated MoES Output</span>
-                    </div>
-
-                    <h3 className="text-base font-bold text-white leading-snug">
-                      {activeItem.title}
-                    </h3>
-                    <div className="text-xs text-slate-300 whitespace-pre-line leading-relaxed font-sans">
-                      {activeItem.content}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-12 text-slate-400 text-xs font-mono">
-              Select source and generate content to review outreach packages.
             </div>
           )}
         </div>
 
-        {/* COLUMN 3 (RIGHT): Human Review & Dissemination Pipeline */}
-        <div className="lg:col-span-3 bg-[#0b101d] border border-slate-800 rounded-lg p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <span className="text-xs font-mono uppercase text-slate-300 font-semibold">
-              Review & Publishing
-            </span>
-            <span className="text-[10px] text-slate-400 font-mono">Stage Gate</span>
+        {/* ========================================================
+            COLUMN 3 (RIGHT): OUTPUT & WORKFLOW
+            ======================================================== */}
+        <div className="lg:col-span-3 border border-slate-300 bg-white p-4 space-y-4">
+          <div className="border-b border-slate-300 pb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider font-mono text-[#002244]">
+              3. Editorial Workflow & Dissemination
+            </h2>
           </div>
 
+          {/* Workflow Status Controls */}
           {activeItem && (
-            <div className="space-y-4">
-              {/* Current Status Indicator */}
-              <div className="p-3 bg-slate-900 rounded border border-slate-800 space-y-1.5">
-                <div className="text-[10px] font-mono text-slate-400 uppercase">Workflow State:</div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      activeItem.reviewStatus === 'published'
-                        ? 'bg-emerald-400'
-                        : activeItem.reviewStatus === 'approved'
-                        ? 'bg-sky-400'
-                        : activeItem.reviewStatus === 'under_review'
-                        ? 'bg-amber-400'
-                        : 'bg-slate-400'
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+                  Transition Document Status:
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 text-xs font-mono">
+                  <button
+                    onClick={() => handleStatusChange('draft')}
+                    className={`p-1.5 border text-center cursor-pointer ${
+                      activeItem.reviewStatus === 'draft'
+                        ? 'bg-slate-800 text-white font-bold'
+                        : 'bg-slate-100 border-slate-300 text-slate-700'
                     }`}
-                  />
-                  <span className="text-xs font-bold font-mono text-white uppercase tracking-wider">
-                    {activeItem.reviewStatus.replace('_', ' ')}
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-400 font-mono">
-                  Created: {activeItem.createdAt} · Target: {activeItem.targetAudience}
+                  >
+                    Draft
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('under_review')}
+                    className={`p-1.5 border text-center cursor-pointer ${
+                      activeItem.reviewStatus === 'under_review' || activeItem.reviewStatus === 'ai_generated'
+                        ? 'bg-amber-600 text-white font-bold'
+                        : 'bg-slate-100 border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    Review
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('approved')}
+                    className={`p-1.5 border text-center cursor-pointer ${
+                      activeItem.reviewStatus === 'approved'
+                        ? 'bg-blue-700 text-white font-bold'
+                        : 'bg-slate-100 border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    Approved
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('published')}
+                    className={`p-1.5 border text-center cursor-pointer ${
+                      activeItem.reviewStatus === 'published'
+                        ? 'bg-emerald-700 text-white font-bold'
+                        : 'bg-slate-100 border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    Published
+                  </button>
                 </div>
               </div>
 
-              {/* Reviewer Notes Box */}
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-mono text-slate-400 uppercase">
-                  Scientific Reviewer Notes:
+              {/* Reviewer Sign-Off Notes */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+                  Reviewer Notes:
                 </label>
                 <textarea
                   rows={3}
                   value={reviewNotesInput}
                   onChange={(e) => setReviewNotesInput(e.target.value)}
-                  placeholder="Verification comments by scientific outreach officer..."
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded text-xs text-slate-300 focus:outline-none focus:border-sky-500"
+                  placeholder="e.g. Verified by Dr. M. Ravichandran. Figures matched with CTD transect data."
+                  className="w-full p-2 border border-slate-300 text-xs text-slate-800 bg-white focus:outline-none"
                 />
               </div>
 
-              {/* Dissemination Channels */}
-              <div className="space-y-2">
-                <span className="block text-[11px] font-mono text-slate-400 uppercase">
-                  Target Dissemination Channels:
-                </span>
-                <div className="space-y-1 text-xs text-slate-300">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-sky-400" />
-                    <span>Ministry of Earth Sciences (MoES) Web</span>
+              {/* Target Dissemination Channels */}
+              <div className="space-y-1.5 border-t border-slate-200 pt-3">
+                <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+                  Active Channels:
+                </label>
+                <div className="space-y-1 text-xs text-slate-700">
+                  <div className="p-2 bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <span>MoES Web Portal</span>
+                    <span className="text-emerald-700 font-bold text-[10px]">CONNECTED</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-sky-400" />
-                    <span>Press Information Bureau (PIB) Wire</span>
+                  <div className="p-2 bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <span>Public Stories Feed</span>
+                    <span className="text-emerald-700 font-bold text-[10px]">CONNECTED</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-sky-400" />
-                    <span>Social Channels (X, Instagram, LinkedIn)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-3 h-3 text-sky-400" />
-                    <span>Smart Education / School Science Portals</span>
+                  <div className="p-2 bg-slate-50 border border-slate-200 flex items-center justify-between">
+                    <span>PIB Science Wire</span>
+                    <span className="text-slate-500 text-[10px]">READY</span>
                   </div>
                 </div>
               </div>
 
-              {/* Stage Transition Action Buttons */}
-              <div className="space-y-2 pt-3 border-t border-slate-800">
-                <button
-                  onClick={() => handleStatusChange('under_review')}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 border border-amber-800/60 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>Submit for Scientific Review</span>
-                </button>
-
-                <button
-                  onClick={() => handleStatusChange('approved')}
-                  className="w-full py-2 px-3 text-xs font-semibold rounded bg-sky-950/40 hover:bg-sky-900/50 text-sky-300 border border-sky-800/60 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>Approve Content for Dissemination</span>
-                </button>
-
-                <button
-                  onClick={() => handleStatusChange('published')}
-                  className="w-full py-2 px-3 text-xs font-bold rounded bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer flex items-center justify-center gap-1.5 shadow transition-all"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Publish to Website & Social Channels</span>
-                </button>
-              </div>
-
-              {activeItem.reviewStatus === 'published' && (
-                <div className="p-3 bg-emerald-950/20 border border-emerald-500/30 rounded space-y-2 text-xs">
-                  <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Published to Public Portal</span>
-                  </div>
-                  <button
-                    onClick={() => onNavigate('stories')}
-                    className="w-full py-1.5 text-xs text-center text-sky-300 bg-slate-900 rounded hover:underline cursor-pointer"
-                  >
-                    View in Public Stories →
-                  </button>
-                </div>
-              )}
+              {/* Action Button: Disseminate to Public */}
+              <button
+                onClick={() => {
+                  handleStatusChange('published');
+                  onNavigate('stories');
+                }}
+                className="w-full ds-btn-primary justify-center py-2 text-xs"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Publish to Public Stories</span>
+              </button>
             </div>
           )}
+
+          {/* Previously Generated Queue in Newsroom */}
+          <div className="border-t border-slate-200 pt-3 space-y-2">
+            <label className="block text-[11px] font-mono text-slate-500 uppercase font-semibold">
+              Recent Newsroom Drafts:
+            </label>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {generatedItems.slice(0, 5).map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveItemId(item.id)}
+                  className={`w-full p-2 text-left border transition-colors cursor-pointer text-xs ${
+                    activeItemId === item.id
+                      ? 'bg-blue-50 border-[#003366] text-[#002244] font-semibold'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="truncate text-xs font-semibold">{item.title}</div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono mt-0.5">
+                    <span>{item.formatLabel}</span>
+                    <span className="uppercase">{item.reviewStatus}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

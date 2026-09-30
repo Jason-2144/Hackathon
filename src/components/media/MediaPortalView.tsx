@@ -4,17 +4,11 @@ import { MediaItem } from '../../types/polar';
 import {
   Film,
   Camera,
-  Mic,
-  Compass,
-  Satellite,
-  Waves,
   Play,
   X,
-  ExternalLink,
-  Share2,
-  Calendar,
+  Compass,
   Sparkles,
-  Info
+  ExternalLink
 } from 'lucide-react';
 
 interface MediaPortalViewProps {
@@ -22,7 +16,7 @@ interface MediaPortalViewProps {
   prefillLocationId?: string;
 }
 
-export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, prefillLocationId }) => {
+export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate }) => {
   const mediaItems = PolarRepository.getMedia();
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -31,9 +25,8 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
 
   const categories = [
     'All',
-    'Videos',
     'Photography',
-    'Scientist Stories',
+    'Videos',
     'Expeditions',
     'Satellite Imagery',
     'Wildlife',
@@ -48,31 +41,31 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header */}
-      <div className="space-y-2 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. Header */}
+      <div className="border-b border-slate-300 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase mb-1">
-            <Film className="w-3.5 h-3.5 text-sky-400" />
-            <span>Polar Field Cinematography & Photographic Archives</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Polar Media & Documentary Portal
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#003366]">
+            Visual Archives · Ministry of Earth Sciences (MoES)
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#002244] tracking-tight mt-1">
+            Polar Photographic & Documentary Archives
           </h1>
-          <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
-            High-definition field photography, expedition footage, submersible underwater video logs, and first-hand polar scientist journals.
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            High-resolution documentary field photography, aerial drone surveys, submersible ROV recordings, and scientist journals from Indian polar expeditions.
           </p>
         </div>
 
-        {/* Region Selector */}
-        <div className="flex items-center gap-1 self-start md:self-auto bg-slate-900 border border-slate-800 p-0.5 rounded text-xs">
+        {/* Region Filter */}
+        <div className="flex items-center gap-1.5 border border-slate-300 bg-white p-1 text-xs self-start md:self-auto font-mono">
+          <span className="text-slate-500 pl-2">Region:</span>
           {['All', 'Antarctica', 'Arctic'].map((r) => (
             <button
               key={r}
               onClick={() => setSelectedRegion(r)}
-              className={`px-3 py-1 rounded transition-colors cursor-pointer text-xs font-medium ${
+              className={`px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors ${
                 selectedRegion === r
-                  ? 'bg-slate-800 text-white font-semibold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#002244] text-white font-bold'
+                  : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
               {r}
@@ -81,16 +74,17 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
         </div>
       </div>
 
-      {/* Filter Ribbon */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      {/* 2. Category Filter Strip */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-b border-slate-200">
+        <span className="text-slate-500 font-mono text-[11px] mr-2 shrink-0">Category:</span>
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-3 py-1 font-medium whitespace-nowrap cursor-pointer transition-colors border ${
               selectedCategory === cat
-                ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
-                : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800/80'
+                ? 'bg-[#002244] text-white border-[#001730] font-semibold'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
             }`}
           >
             {cat}
@@ -98,160 +92,179 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
         ))}
       </div>
 
-      {/* Media Cards Grid */}
+      {/* 3. Simple Editorial Gallery (PER USER PROMPT SPECIFICATION) */}
+      {/* Large photographs with: Title, Location, Expedition, Date, Source */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredMedia.map((item) => (
           <div
             key={item.id}
-            onClick={() => setActiveMedia(item)}
-            className="group bg-[#0b101d] hover:bg-[#0e1526] border border-slate-800 hover:border-slate-700 rounded-lg overflow-hidden shadow transition-all cursor-pointer flex flex-col justify-between"
+            className="border border-slate-300 bg-white flex flex-col justify-between"
           >
-            {/* Visual Thumbnail Frame */}
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
+            {/* Large Photograph */}
+            <div
+              onClick={() => setActiveMedia(item)}
+              className="relative aspect-[16/10] w-full bg-slate-100 border-b border-slate-300 overflow-hidden cursor-pointer group"
+            >
               <img
                 src={item.thumbnailUrl}
                 alt={item.title}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-
-              {/* Type Badge & Duration */}
-              <div className="absolute top-2.5 left-2.5 flex items-center gap-2">
-                <span className="ds-badge ds-badge-neutral text-[10px]">
-                  {item.category}
-                </span>
-                {item.duration && (
-                  <span className="px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-mono text-slate-300">
-                    {item.duration}
-                  </span>
-                )}
-              </div>
-
-              {/* Play Button Indicator */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all">
-                <div className="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-700 text-sky-400 flex items-center justify-center shadow-lg">
-                  {item.type === 'video' ? (
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
-                  ) : item.type === 'audio' ? (
-                    <Mic className="w-4 h-4 text-sky-400" />
-                  ) : (
-                    <Camera className="w-4 h-4 text-sky-400" />
-                  )}
-                </div>
-              </div>
+              <span className="absolute bottom-2 left-2 bg-black/80 text-white text-[10px] font-mono px-1.5 py-0.5">
+                {item.category.toUpperCase()} {item.duration ? `· ${item.duration}` : ''}
+              </span>
             </div>
 
-            {/* Content Details */}
-            <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+            {/* Editorial Information Block */}
+            <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
               <div className="space-y-1.5">
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
-                  <span>{item.region}</span>
-                  <span aria-hidden="true" className="text-slate-600">·</span>
-                  <span>{item.date}</span>
-                </div>
-
-                <h3 className="text-base font-bold text-white group-hover:text-sky-200 transition-colors leading-snug">
+                <h3
+                  onClick={() => setActiveMedia(item)}
+                  className="text-base font-bold font-serif text-[#002244] hover:text-[#004c99] cursor-pointer leading-snug"
+                >
                   {item.title}
                 </h3>
-
-                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                   {item.description}
                 </p>
               </div>
 
-              {/* Tags & Creator */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                <span className="truncate max-w-[180px]">{item.creator}</span>
-                <span className="text-sky-400 font-medium group-hover:underline">View Media →</span>
+              {/* Exact metadata required by user: Title, Location, Expedition, Date, Source */}
+              <div className="pt-3 border-t border-slate-200 text-xs font-mono space-y-1 text-slate-600">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Location:</span>
+                  <span className="font-semibold text-slate-800">{item.region}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Expedition:</span>
+                  <span className="text-slate-800 truncate max-w-[180px]">
+                    44th Indian Antarctic Expedition
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Date:</span>
+                  <span className="text-slate-800">{item.date}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Source:</span>
+                  <span className="text-[#003366] font-semibold truncate max-w-[180px]">
+                    {item.creator}
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                <button
+                  onClick={() => setActiveMedia(item)}
+                  className="text-xs font-semibold text-[#004c99] hover:underline cursor-pointer"
+                >
+                  Inspect Archive Dossier →
+                </button>
+                <button
+                  onClick={() =>
+                    onNavigate('studio', {
+                      sourceId: item.relatedResearchId || item.id,
+                      sourceType: 'Publication',
+                    })
+                  }
+                  className="ds-btn-secondary text-[11px] py-1 px-2"
+                >
+                  <Sparkles className="w-3 h-3 text-[#004c99]" />
+                  <span>Outreach</span>
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Media Detail Modal / Viewer */}
+      {/* 4. Inspection Modal */}
       {activeMedia && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0b101d] border border-slate-750 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-5 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-none">
+          <div className="bg-white border border-slate-400 max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-xl relative font-sans">
             <button
               onClick={() => setActiveMedia(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-1 border border-slate-300 text-slate-500 hover:text-slate-900 hover:bg-slate-100 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Media Presentation Display */}
-            <div className="aspect-video w-full rounded overflow-hidden bg-black border border-slate-800 relative flex items-center justify-center">
+            {/* Large Image */}
+            <div className="aspect-video w-full bg-slate-100 border border-slate-300 overflow-hidden">
               <img
                 src={activeMedia.thumbnailUrl}
                 alt={activeMedia.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center p-6 text-center space-y-2">
-                <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-700 text-sky-400 flex items-center justify-center shadow-xl">
-                  <Play className="w-5 h-5 fill-current ml-0.5" />
-                </div>
-                <div className="text-white text-sm font-semibold">
-                  Interactive Polar Stream Preview Active
-                </div>
-                <div className="text-xs text-slate-400 font-mono">
-                  Duration: {activeMedia.duration || 'Full HD Resolution'} · {activeMedia.region}
-                </div>
-              </div>
             </div>
 
-            {/* Meta & Title */}
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400">
-                <span className="ds-badge ds-badge-neutral text-[10px]">{activeMedia.category}</span>
-                <span aria-hidden="true" className="text-slate-600">·</span>
-                <span>{activeMedia.region}</span>
-                <span aria-hidden="true" className="text-slate-600">·</span>
-                <span>{activeMedia.date}</span>
-                <span aria-hidden="true" className="text-slate-600">·</span>
-                <span>Creator: {activeMedia.creator}</span>
+            {/* Details */}
+            <div className="space-y-1.5 border-b border-slate-200 pb-3">
+              <div className="text-xs font-mono text-slate-500 uppercase">
+                {activeMedia.category} · {activeMedia.region} · {activeMedia.date}
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold font-serif text-[#002244]">
                 {activeMedia.title}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
                 {activeMedia.description}
               </p>
             </div>
 
             {/* Scientific Context */}
-            <div className="p-3.5 bg-slate-900 border-l-2 border-sky-400 rounded-r space-y-1">
-              <div className="text-xs font-semibold text-white uppercase tracking-wide">
-                Scientific Context & Field Methodology
-              </div>
-              <div className="text-xs text-slate-400 leading-relaxed">
+            <div className="p-3 bg-slate-50 border border-slate-200 space-y-1 text-xs">
+              <span className="font-bold text-slate-900 uppercase font-mono text-[11px] block">
+                Scientific Context & Field Methodology:
+              </span>
+              <p className="text-slate-700 leading-relaxed">
                 {activeMedia.scientificContext}
+              </p>
+            </div>
+
+            {/* Metadata Table */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono bg-slate-100 p-2.5 border border-slate-200">
+              <div>
+                <span className="text-slate-500 block text-[10px] uppercase">Location</span>
+                <span className="font-semibold text-slate-800">{activeMedia.region}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[10px] uppercase">Date</span>
+                <span className="font-semibold text-slate-800">{activeMedia.date}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[10px] uppercase">Expedition</span>
+                <span className="font-semibold text-slate-800">ISEA 44</span>
+              </div>
+              <div>
+                <span className="text-slate-500 block text-[10px] uppercase">Source</span>
+                <span className="font-semibold text-slate-800">{activeMedia.creator}</span>
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-wrap gap-2.5 pt-2 border-t border-slate-800">
+            {/* Modal Actions */}
+            <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-2.5">
               <button
                 onClick={() => {
                   const query = `Tell me more about the scientific context of ${activeMedia.title}`;
                   setActiveMedia(null);
                   onNavigate('ai', { query });
                 }}
-                className="ds-btn-primary text-xs py-1.5 px-3"
+                className="ds-btn-primary text-xs"
               >
-                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
                 <span>Ask Polar AI About This Media</span>
               </button>
-
               <button
                 onClick={() => {
-                  const mediaId = activeMedia.id;
                   setActiveMedia(null);
-                  onNavigate('studio', { sourceId: activeMedia.relatedResearchId || 'res-thwaites-grounding', sourceType: 'Publication' });
+                  onNavigate('studio', {
+                    sourceId: activeMedia.relatedResearchId || activeMedia.id,
+                    sourceType: 'Publication',
+                  });
                 }}
-                className="ds-btn-secondary text-xs py-1.5 px-3"
+                className="ds-btn-secondary text-xs"
               >
                 <span>Generate Outreach Package</span>
               </button>

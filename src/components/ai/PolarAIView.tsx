@@ -2,19 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { askPolarAI } from '../../lib/gemini';
 import { AIResponse } from '../../types/polar';
 import {
-  Sparkles,
-  Send,
+  Search,
   BookOpen,
   ArrowRight,
   ExternalLink,
-  ShieldAlert,
   CheckCircle,
-  Database,
-  Compass,
   Copy,
   TrendingDown,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  Compass,
+  FileText,
+  Database
 } from 'lucide-react';
 
 interface PolarAIViewProps {
@@ -54,27 +53,26 @@ export const PolarAIView: React.FC<PolarAIViewProps> = ({ onNavigate, prefillQue
     if (prefillQuery) {
       handleSearch(prefillQuery);
     } else if (!response) {
-      // Pre-load Thwaites question for an instant impressive initial state
       handleSearch('Tell me about Thwaites Glacier.');
     }
   }, [prefillQuery]);
 
   const copyFullResponse = () => {
     if (!response) return;
-    const text = `POLAR AI INTELLIGENCE RECORD
+    const text = `POLARIS SCIENTIFIC RESEARCH RECORD
 Query: ${response.query}
 
-SIMPLE EXPLANATION:
+ANSWER:
 ${response.simpleExplanation}
 
-SCIENTIFIC EXPLANATION:
+EMPIRICAL DYNAMICS:
 ${response.scientificExplanation}
 
-KEY FACTS:
-${response.keyFacts.map((f) => `- ${f}`).join('\n')}
+KEY EMPIRICAL FACTS:
+${response.keyFacts.map((f, i) => `${i + 1}. ${f}`).join('\n')}
 
 SOURCES CITED:
-${response.sources.map((s) => `${s.title} (${s.institution}, ${s.year}) - ${s.urlOrDoi}`).join('\n')}`;
+${response.sources.map((s, i) => `${i + 1}. ${s.title} (${s.institution}, ${s.year}) - Ref: ${s.urlOrDoi}`).join('\n')}`;
 
     navigator.clipboard.writeText(text);
     setCopiedText(true);
@@ -82,35 +80,72 @@ ${response.sources.map((s) => `${s.title} (${s.institution}, ${s.year}) - ${s.ur
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header */}
-      <div className="border-b border-slate-800 pb-5 space-y-2">
-        <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase">
-          <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-          <span>Empirical Polar Knowledge Intelligence</span>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      {/* 1. Header (Clean Institutional Header) */}
+      <div className="border-b border-slate-300 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#003366]">
+            Ministry of Earth Sciences (MoES) · Automated Science Assistant
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#002244] tracking-tight mt-1">
+            ASK POLARIS
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            Scientific research assistant querying peer-reviewed cryospheric literature, expedition reports, and empirical datasets with verifiable institutional source citations.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-          POLAR AI
-        </h1>
-        <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
-          Synthesize peer-reviewed cryospheric science into dual-audience explanations (Student/Public and Glaciologist/Research level), complete with empirical facts and verifiable institutional citations.
-        </p>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 border border-slate-300 text-xs font-mono text-slate-700 self-start sm:self-auto shrink-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+          <span>Gemini 3.8 Flash AI Integration</span>
+        </div>
       </div>
 
-      {/* Suggested Questions Grid */}
-      <div className="space-y-1.5">
-        <div className="text-xs font-mono text-slate-400">
-          Suggested Inquiries:
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+      {/* 2. Simple Rectangular Search Bar */}
+      <div className="bg-white border border-slate-300 p-4 space-y-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSearch(query);
+          }}
+          className="flex flex-col sm:flex-row gap-2"
+        >
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ask a scientific question regarding glaciers, ice sheets, stations, or climate models..."
+              className="w-full pl-9 pr-3 py-2 border border-slate-300 text-xs sm:text-sm text-slate-900 bg-white placeholder-slate-400 focus:outline-none focus:border-[#003366]"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading || !query.trim()}
+            className="ds-btn-primary shrink-0 justify-center"
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Searching Literature...</span>
+              </>
+            ) : (
+              <span>Ask POLARIS</span>
+            )}
+          </button>
+        </form>
+
+        {/* Suggested Queries */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+          <span className="text-slate-500 font-mono text-[11px] mr-1">Inquiries:</span>
           {suggestedQuestions.map((q) => (
             <button
               key={q}
               onClick={() => handleSearch(q)}
-              className={`px-3 py-1 text-xs rounded transition-colors cursor-pointer ${
+              className={`px-2 py-0.5 border text-xs cursor-pointer transition-colors ${
                 query === q
-                  ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-[#002244] text-white border-[#001730] font-semibold'
+                  : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200'
               }`}
             >
               {q}
@@ -119,221 +154,167 @@ ${response.sources.map((s) => `${s.title} (${s.institution}, ${s.year}) - ${s.ur
         </div>
       </div>
 
-      {/* Query Input Bar */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSearch(query);
-        }}
-        className="relative max-w-3xl"
-      >
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask a question about glaciers, sea ice, stations, climate trends, wildlife..."
-          className="w-full pl-4 pr-28 py-3 bg-slate-900 border border-slate-700/80 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 shadow-sm"
-        />
-        <button
-          type="submit"
-          disabled={loading || !query.trim()}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 ds-btn-primary text-xs py-1.5 px-3.5 disabled:opacity-50"
-        >
-          {loading ? (
-            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <>
-              <span>Ask</span>
-              <Send className="w-3 h-3 text-slate-950" />
-            </>
-          )}
-        </button>
-      </form>
-
-      {/* Loading State */}
+      {/* 3. Loading Indicator */}
       {loading && (
-        <div className="max-w-3xl bg-[#0b101d] border border-slate-800 rounded-lg p-8 text-center space-y-3">
-          <div className="inline-block p-3 rounded-md bg-slate-900 text-sky-400 border border-slate-800 animate-pulse">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div className="text-sm font-semibold text-white">Synthesizing Polar Intelligence...</div>
-          <div className="text-xs text-slate-400 font-mono">
-            Querying peer-reviewed literature, satellite indices & empirical models
+        <div className="bg-white border border-slate-300 p-8 text-center space-y-2">
+          <RefreshCw className="w-6 h-6 animate-spin text-[#003366] mx-auto" />
+          <div className="text-sm font-bold text-slate-900">Retrieving Peer-Reviewed Cryospheric Data</div>
+          <div className="text-xs text-slate-500 font-mono">
+            Cross-referencing NCPOR reports, InSAR radar telemetry, and published glaciological papers...
           </div>
         </div>
       )}
 
-      {/* Structured AI Response View */}
+      {/* 4. Structured Answer & Visible Citations (PER PROMPT SPECIFICATION) */}
       {!loading && response && (
-        <div className="max-w-3xl bg-[#0b101d] border border-slate-800 rounded-lg p-5 sm:p-6 space-y-6 shadow">
-          {/* Header & Copy Button */}
-          <div className="flex items-start justify-between gap-4 border-b border-slate-800 pb-4">
+        <div className="bg-white border border-slate-300 p-6 space-y-6">
+          {/* Header & Copy */}
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-slate-200 pb-4">
             <div>
-              <div className="text-xs font-mono text-slate-400 uppercase tracking-wider mb-1">
-                Polar Intelligence Synthesis
-              </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white">
+              <span className="text-[10px] font-mono uppercase font-bold text-slate-500">
+                Inquiry Record
+              </span>
+              <h2 className="text-lg sm:text-xl font-bold font-serif text-[#002244] mt-0.5">
                 "{response.query}"
               </h2>
             </div>
             <button
               onClick={copyFullResponse}
-              className="ds-btn-secondary text-xs py-1 px-2.5"
+              className="ds-btn-secondary text-xs shrink-0"
             >
               {copiedText ? (
                 <>
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Copied</span>
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Report Copied</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Copy Report</span>
+                  <Copy className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Copy Research Synthesis</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Section 1: Simple Explanation */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-sky-400" />
-              <span>Simple Explanation (Student & Public Audience)</span>
+          {/* Answer Section */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xs font-mono uppercase font-bold text-slate-700 tracking-wider mb-1.5">
+                Answer (Executive & Student Context)
+              </h3>
+              <p className="text-sm text-slate-800 leading-relaxed bg-slate-50 p-4 border border-slate-200">
+                {response.simpleExplanation}
+              </p>
             </div>
-            <p className="text-sm text-slate-200 leading-relaxed bg-slate-900 border-l-2 border-sky-400 p-3.5 rounded-r">
-              {response.simpleExplanation}
-            </p>
+
+            <div>
+              <h3 className="text-xs font-mono uppercase font-bold text-slate-700 tracking-wider mb-1.5">
+                Empirical Glaciology & Dynamics
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 border border-slate-200">
+                {response.scientificExplanation}
+              </p>
+            </div>
           </div>
 
-          {/* Section 2: Scientific Explanation */}
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-slate-400" />
-              <span>Scientific Explanation (Empirical Glaciology & Dynamics)</span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed bg-slate-900 border-l-2 border-slate-600 p-3.5 rounded-r">
-              {response.scientificExplanation}
-            </p>
-          </div>
-
-          {/* Section 3: Key Facts */}
+          {/* Key Facts */}
           <div className="space-y-2">
-            <div className="text-xs font-mono uppercase tracking-wider text-slate-400">
-              Key Empirical Facts
-            </div>
-            <div className="grid grid-cols-1 gap-1.5">
+            <h3 className="text-xs font-mono uppercase font-bold text-slate-700 tracking-wider">
+              Key Empirical Observations
+            </h3>
+            <div className="border border-slate-300 divide-y divide-slate-200">
               {response.keyFacts.map((fact, idx) => (
-                <div key={idx} className="flex items-start gap-2 p-2.5 rounded bg-slate-900 border border-slate-800 text-xs text-slate-200">
-                  <CheckCircle className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
+                <div key={idx} className="p-3 text-xs text-slate-800 flex items-start gap-2.5">
+                  <span className="font-mono font-bold text-[#003366] shrink-0 mt-0.5">
+                    {String(idx + 1).padStart(2, '0')}.
+                  </span>
                   <span className="leading-relaxed">{fact}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Section 4: Related Data */}
+          {/* Related Data Feeds */}
           {response.relatedData && response.relatedData.length > 0 && (
             <div className="space-y-2">
-              <div className="text-xs font-mono uppercase tracking-wider text-slate-400">
-                Related Observational Data
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <h3 className="text-xs font-mono uppercase font-bold text-slate-700 tracking-wider">
+                Related Observational Telemetry
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {response.relatedData.map((d, idx) => (
-                  <div key={idx} className="p-3 rounded bg-slate-900 border border-slate-800 space-y-1">
-                    <div className="text-[11px] text-slate-400 font-medium">{d.metric}</div>
-                    <div className="text-lg font-bold font-mono text-white flex items-center justify-between">
+                  <div key={idx} className="p-3 bg-slate-50 border border-slate-300 space-y-0.5">
+                    <div className="text-[11px] text-slate-600 font-medium">{d.metric}</div>
+                    <div className="text-lg font-bold font-mono text-[#002244] flex items-center justify-between">
                       <span>{d.value}</span>
                       {d.trend === 'increasing' ? (
-                        <TrendingUp className="w-3.5 h-3.5 text-rose-400" />
+                        <TrendingUp className="w-4 h-4 text-rose-600" />
                       ) : d.trend === 'decreasing' ? (
-                        <TrendingDown className="w-3.5 h-3.5 text-amber-400" />
+                        <TrendingDown className="w-4 h-4 text-amber-600" />
                       ) : null}
                     </div>
-                    <div className="text-[10px] text-slate-500 font-mono leading-tight">{d.context}</div>
+                    <div className="text-[10px] text-slate-500 font-mono">{d.context}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Section 5: Sources & Citations */}
-          <div className="pt-4 border-t border-slate-800 space-y-2.5">
+          {/* Prominent Sources & Citations (EXACTLY AS SPECIFIED IN USER PROMPT) */}
+          <div className="space-y-2 pt-2 border-t border-slate-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400">
-                <BookOpen className="w-3.5 h-3.5 text-sky-400" />
-                <span>Cited Scientific Sources ({response.sources.length})</span>
-              </div>
-              <span className="text-[11px] text-slate-500 font-mono">Peer-Reviewed / Institutional</span>
+              <h3 className="text-xs font-mono uppercase font-bold text-[#003366] tracking-wider flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Sources & Academic Citations ({response.sources.length})</span>
+              </h3>
+              <span className="text-[11px] text-slate-500 font-mono">Peer-Reviewed Literature</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="border border-slate-300 divide-y divide-slate-200 bg-slate-50">
               {response.sources.map((src, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 bg-slate-900 border border-slate-800 rounded flex items-start justify-between gap-3 text-xs"
-                >
-                  <div>
-                    <div className="font-semibold text-slate-200">{src.title}</div>
-                    <div className="text-slate-400 text-[11px] mt-0.5">
-                      {src.institution} · {src.year}
+                <div key={idx} className="p-3 flex items-start justify-between gap-3 text-xs">
+                  <div className="space-y-0.5">
+                    <div className="font-semibold text-slate-900">
+                      {idx + 1}. {src.title}
                     </div>
-                    <div className="text-sky-400 font-mono text-[10px] mt-1">
-                      Ref: {src.urlOrDoi}
+                    <div className="text-slate-600 text-[11px]">
+                      {src.institution} · Published {src.year}
+                    </div>
+                    <div className="font-mono text-[11px] text-[#004c99]">
+                      Reference / DOI: {src.urlOrDoi}
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <span className="ds-badge ds-badge-neutral text-[10px]">
-                      {(src.confidenceScore * 100).toFixed(0)}% Match
-                    </span>
-                  </div>
+                  <span className="ds-badge ds-badge-neutral text-[10px] shrink-0">
+                    {(src.confidenceScore * 100).toFixed(0)}% Citation Match
+                  </span>
                 </div>
               ))}
             </div>
-
-            {/* Scientific Rigor Disclaimer */}
-            <div className="flex items-center gap-2 p-2.5 rounded bg-slate-900/60 text-[11px] text-slate-400 border border-slate-800">
-              <ShieldAlert className="w-4 h-4 text-sky-400 shrink-0" />
-              <span>
-                POLAR AI grounds responses strictly in peer-reviewed polar science and MoES research. Cross-reference with the Knowledge Repository for raw telemetry.
-              </span>
-            </div>
           </div>
 
-          {/* Next Step Actions: Turn into Story / Explore on Map */}
-          <div className="pt-2 border-t border-slate-800 flex flex-wrap gap-2.5">
+          {/* Action Row */}
+          <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-2.5">
             <button
-              onClick={() => onNavigate('studio')}
-              className="ds-btn-primary text-xs py-1.5 px-3"
+              onClick={() => onNavigate('studio', { prefillSourceId: response.sources[0]?.urlOrDoi })}
+              className="ds-btn-primary"
             >
-              <BookOpen className="w-3.5 h-3.5 text-slate-950" />
-              <span>Convert Topic Into Outreach Content</span>
+              <span>Transform Topic Into Outreach Story</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onNavigate('repository')}
+              className="ds-btn-secondary"
+            >
+              <Database className="w-3.5 h-3.5 text-slate-600" />
+              <span>Cross-Reference Central Repository</span>
             </button>
             <button
               onClick={() => onNavigate('explore')}
-              className="ds-btn-secondary text-xs py-1.5 px-3"
+              className="ds-btn-secondary"
             >
-              <Compass className="w-3.5 h-3.5 text-slate-300" />
-              <span>View On Polar Map</span>
+              <Compass className="w-3.5 h-3.5 text-slate-600" />
+              <span>Inspect on Cartography Map</span>
             </button>
           </div>
-
-          {/* Suggested Follow-Ups */}
-          {response.suggestedFollowUps && response.suggestedFollowUps.length > 0 && (
-            <div className="pt-4 border-t border-slate-800 space-y-2">
-              <div className="text-xs font-mono text-slate-400">Suggested Follow-Up Inquiries:</div>
-              <div className="flex flex-wrap gap-1.5">
-                {response.suggestedFollowUps.map((followUp, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSearch(followUp)}
-                    className="text-left px-2.5 py-1 text-xs text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded transition-colors cursor-pointer"
-                  >
-                    → {followUp}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

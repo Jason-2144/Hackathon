@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Compass, Sparkles, Menu, X, PlayCircle, ChevronDown } from 'lucide-react';
+import { Compass, Menu, X, Play, BookOpen, Database, FileText, ChevronRight } from 'lucide-react';
 
 export type ActiveTab =
   | 'home'
   | 'expeditions'
   | 'repository'
+  | 'publications'
+  | 'datasets'
   | 'studio'
   | 'activities'
   | 'explore'
@@ -16,179 +18,198 @@ export type ActiveTab =
 
 interface HeaderProps {
   activeTab: ActiveTab;
-  setActiveTab: (tab: ActiveTab) => void;
+  setActiveTab: (tab: ActiveTab, params?: any) => void;
   onStartDemoTour?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, onStartDemoTour }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
 
-  // Top 5 primary items visible on desktop
-  const primaryNavItems: { id: ActiveTab; label: string }[] = [
+  // Exact navigation as requested by problem statement & user prompt
+  const mainNavItems: { id: ActiveTab; label: string; contentType?: string }[] = [
     { id: 'home', label: 'Home' },
     { id: 'expeditions', label: 'Expeditions' },
     { id: 'repository', label: 'Repository' },
-    { id: 'studio', label: 'Content Studio' },
+    { id: 'publications', label: 'Publications', contentType: 'Publication' },
+    { id: 'datasets', label: 'Datasets', contentType: 'Dataset' },
+    { id: 'media', label: 'Media' },
     { id: 'activities', label: 'Activities' },
+    { id: 'ai', label: 'Polar AI' },
+    { id: 'studio', label: 'Content Studio' },
   ];
 
-  // Secondary items in clean "More" dropdown per Top Bar Contract
-  const secondaryNavItems: { id: ActiveTab; label: string }[] = [
-    { id: 'explore', label: 'Explore Map' },
-    { id: 'ai', label: 'Polar AI' },
-    { id: 'media', label: 'Media Portal' },
+  const utilityNavItems: { id: ActiveTab; label: string }[] = [
+    { id: 'explore', label: 'Cartography Map' },
     { id: 'stories', label: 'Public Stories' },
-    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'dashboard', label: 'Institutional Dashboard' },
     { id: 'about', label: 'About MoES' },
   ];
 
-  const allNavItems = [...primaryNavItems, ...secondaryNavItems];
+  const handleNavClick = (item: { id: ActiveTab; label: string; contentType?: string }) => {
+    if (item.contentType) {
+      setActiveTab('repository', { contentType: item.contentType });
+    } else {
+      setActiveTab(item.id);
+    }
+    setMobileMenuOpen(false);
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#060913]/95 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Zone 1: Single Wordmark Brand Zone */}
-        <button
-          onClick={() => setActiveTab('home')}
-          className="flex items-center gap-3 text-left focus:outline-none group cursor-pointer shrink-0"
-        >
-          <div className="w-8 h-8 rounded border border-sky-500/40 bg-slate-900 flex items-center justify-center text-sky-400 group-hover:border-sky-400 transition-colors">
-            <Compass className="w-4 h-4" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base tracking-tight text-white font-sans">POLARIS</span>
-              <span className="text-[10px] uppercase font-mono tracking-wider text-sky-400 font-semibold px-1.5 py-0.2 rounded bg-sky-950/60 border border-sky-800/60 hidden sm:inline">
-                MoES
-              </span>
-            </div>
-            <span className="text-[10px] text-slate-400 font-mono tracking-tight hidden md:inline">
-              Polar Knowledge & Media Portal
+    <header className="w-full bg-white border-b border-slate-300">
+      {/* 1. Official Government of India / MoES Institutional Top Bar */}
+      <div className="bg-[#002244] text-white text-[11px] font-mono border-b border-[#001730]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold tracking-wider text-slate-200">
+              Hackathon project - Team Converse
             </span>
           </div>
-        </button>
 
-        {/* Zone 2: Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1 text-sm font-medium text-slate-300">
-          {primaryNavItems.map((item) => {
-            const isActive = activeTab === item.id;
-            return (
+          <div className="flex items-center gap-4 text-slate-300">
+            <span className="hidden md:inline text-[10px] text-slate-400">
+              Problem Statement 26063: Polar Knowledge & Outreach
+            </span>
+            {onStartDemoTour && (
               <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`px-3 py-1.5 rounded transition-all whitespace-nowrap text-xs xl:text-sm font-medium cursor-pointer ${
-                  isActive
-                    ? 'text-white bg-slate-800 border border-slate-700 font-semibold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
-                }`}
+                onClick={onStartDemoTour}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#003870] hover:bg-[#004c99] text-white text-[10px] font-sans font-semibold cursor-pointer border border-[#004c99] transition-colors"
+                title="Launch 15-step interactive walkthrough"
               >
-                {item.label}
+                <Play className="w-2.5 h-2.5 fill-current" />
+                <span>MoES Demo Tour</span>
               </button>
-            );
-          })}
-
-          {/* More Dropdown for remaining items */}
-          <div className="relative">
-            <button
-              onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs xl:text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 cursor-pointer transition-colors border border-transparent"
-            >
-              <span>More</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-
-            {moreDropdownOpen && (
-              <div
-                className="absolute top-full right-0 mt-1.5 w-48 bg-[#0e1526] border border-slate-800 rounded-lg p-1.5 shadow-xl z-50 space-y-0.5"
-                onMouseLeave={() => setMoreDropdownOpen(false)}
-              >
-                {secondaryNavItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setMoreDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-1.5 rounded text-xs font-medium cursor-pointer transition-colors ${
-                      activeTab === item.id
-                        ? 'text-sky-300 bg-sky-950/40 font-semibold'
-                        : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
             )}
           </div>
-        </nav>
-
-        {/* Zone 3: Primary Actions */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          {onStartDemoTour && (
-            <button
-              onClick={onStartDemoTour}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded transition-colors cursor-pointer"
-              title="Official 15-step PS 26063 Demo Flow"
-            >
-              <PlayCircle className="w-3.5 h-3.5 text-sky-400" />
-              <span>MoES Demo Flow</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => setActiveTab('studio')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-sky-400 hover:bg-sky-300 rounded transition-all cursor-pointer whitespace-nowrap border border-sky-300/60 shadow-sm"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-            <span>Content Studio</span>
-          </button>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 text-slate-400 hover:text-white focus:outline-none cursor-pointer"
-            aria-label="Toggle Navigation"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#0a0f1d] border-b border-slate-800 px-4 py-3 space-y-1">
-          {allNavItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 rounded text-sm font-medium ${
-                activeTab === item.id
-                  ? 'text-white bg-slate-800 font-semibold'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/40'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-          {onStartDemoTour && (
-            <button
-              onClick={() => {
-                onStartDemoTour();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left px-3 py-2 rounded text-sm font-medium text-sky-400 hover:bg-sky-950/30 flex items-center gap-2 pt-2 border-t border-slate-800"
-            >
-              <PlayCircle className="w-4 h-4" />
-              <span>Launch Official MoES Demo Tour</span>
-            </button>
-          )}
+      {/* 2. Main Title Brand Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab('home')}
+            className="flex items-center gap-3 text-left cursor-pointer group"
+          >
+            <div className="w-9 h-9 bg-[#002244] text-white flex items-center justify-center border border-[#001730]">
+              <Compass className="w-5 h-5 text-sky-300" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#002244] font-serif leading-none">
+                POLARIS
+              </div>
+              <div className="text-[11px] text-slate-600 font-sans tracking-tight mt-0.5 font-medium">
+                Integrated Polar Science Outreach & Knowledge Repository
+              </div>
+            </div>
+          </button>
         </div>
-      )}
+
+        {/* Quick Utility Links (Desktop) */}
+        <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-600">
+          <button
+            onClick={() => setActiveTab('explore')}
+            className={`hover:text-[#002244] hover:underline cursor-pointer ${
+              activeTab === 'explore' ? 'font-bold text-[#002244]' : ''
+            }`}
+          >
+            Cartography
+          </button>
+          <span className="text-slate-300">|</span>
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`hover:text-[#002244] hover:underline cursor-pointer ${
+              activeTab === 'dashboard' ? 'font-bold text-[#002244]' : ''
+            }`}
+          >
+            Archive Admin
+          </button>
+          <span className="text-slate-300">|</span>
+          <button
+            onClick={() => setActiveTab('about')}
+            className={`hover:text-[#002244] hover:underline cursor-pointer ${
+              activeTab === 'about' ? 'font-bold text-[#002244]' : ''
+            }`}
+          >
+            About
+          </button>
+        </div>
+
+        {/* Mobile menu button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="lg:hidden p-1.5 border border-slate-300 text-slate-700 hover:bg-slate-100 cursor-pointer"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
+
+      {/* 3. Primary Navigation Bar (Traditional Institutional Rectangular Strip) */}
+      <nav className="bg-[#f1f5f9] border-t border-b border-slate-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto scrollbar-none">
+          <div className="hidden lg:flex items-center">
+            {mainNavItems.map((item) => {
+              const isActive =
+                activeTab === item.id ||
+                (item.id === 'publications' && activeTab === 'publications') ||
+                (item.id === 'datasets' && activeTab === 'datasets');
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item)}
+                  className={`px-4 py-2.5 text-xs font-semibold tracking-wide transition-colors whitespace-nowrap cursor-pointer border-r border-slate-300 ${
+                    isActive
+                      ? 'bg-[#002244] text-white border-b-2 border-b-[#001730]'
+                      : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="hidden lg:flex items-center text-[11px] font-mono text-slate-500 py-1.5">
+            <span>Antarctica 90°S · Arctic 90°N · Indian Ocean</span>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Dropdown */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-white border-t border-slate-300 p-3 space-y-1">
+            <div className="text-[10px] font-mono uppercase text-slate-400 px-3 py-1 font-bold">
+              Main Sections
+            </div>
+            {mainNavItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item)}
+                className="w-full text-left px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-100 border-b border-slate-100 flex items-center justify-between"
+              >
+                <span>{item.label}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            ))}
+
+            <div className="text-[10px] font-mono uppercase text-slate-400 px-3 pt-3 pb-1 font-bold">
+              Additional Portals
+            </div>
+            {utilityNavItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 text-xs text-slate-600 hover:bg-slate-100 flex items-center justify-between"
+              >
+                <span>{item.label}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            ))}
+          </div>
+        )}
+      </nav>
     </header>
   );
 };

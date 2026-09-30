@@ -1,4 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
 import {
   AIResponse,
   OutreachFormat,
@@ -10,62 +9,33 @@ import {
 import { PRESET_AI_KNOWLEDGE } from '../data/polarData';
 import { PolarRepository } from './supabase';
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-const hasGeminiKey = Boolean(apiKey && apiKey.length > 5);
-
-let aiClient: GoogleGenAI | null = null;
-if (hasGeminiKey) {
-  try {
-    aiClient = new GoogleGenAI({ apiKey });
-  } catch (err) {
-    console.warn('Gemini client initialization fallback:', err);
-  }
-}
-
-// 1. Polar AI Q&A Assistant (Existing capability retained per instruction)
+/**
+ * 1. Polar AI Q&A Assistant
+ * Communicates with the server-side Gemini 3.8 Flash proxy endpoint (/api/ai/ask).
+ * Includes scientific repository fallback when offline or during initial configuration.
+ */
 export async function askPolarAI(query: string): Promise<AIResponse> {
   const normalizedQuery = query.toLowerCase().trim();
 
-  if (aiClient) {
-    try {
-      const systemInstruction = `You are POLAR AI, an official polar science intelligence system for the Ministry of Earth Sciences (MoES) and open polar researchers.
-Analyze the user's inquiry regarding Antarctica, the Arctic, glaciology, polar oceanography, or polar ecology.
-Respond ONLY with a valid JSON object matching this schema:
-{
-  "query": "${query}",
-  "simpleExplanation": "Clear, accessible explanation for students and the general public (2-3 sentences)",
-  "scientificExplanation": "Deep, rigorous glaciological or oceanographic explanation using standard empirical terminology",
-  "keyFacts": ["Fact 1", "Fact 2", "Fact 3"],
-  "relatedData": [
-    { "metric": "Name of metric", "value": "Number + unit", "trend": "increasing"|"decreasing"|"stable"|"fluctuating", "context": "Scientific context" }
-  ],
-  "sources": [
-    { "title": "Paper/Report title", "institution": "Publishing entity/journal", "year": 2024, "urlOrDoi": "DOI or URL", "confidenceScore": 0.98 }
-  ],
-  "suggestedFollowUps": ["Question 1", "Question 2", "Question 3"]
-}`;
+  try {
+    const res = await fetch('/api/ai/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
 
-      const response = await aiClient.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: query,
-        config: {
-          systemInstruction,
-          responseMimeType: 'application/json',
-          temperature: 0.2,
-        },
-      });
-
-      const text = response.text;
-      if (text) {
-        return JSON.parse(text) as AIResponse;
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.simpleExplanation && data.scientificExplanation) {
+        return data as AIResponse;
       }
-    } catch (err) {
-      console.warn('Live Gemini API call failed or timed out, using scientific knowledge base:', err);
     }
+  } catch (err) {
+    console.info('[POLARIS Client] Live Gemini endpoint unavailable, utilizing scientific knowledge base fallback:', err);
   }
 
-  // Simulated scientific inference fallback
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  // Simulated scientific inference fallback using verified repository knowledge
+  await new Promise((resolve) => setTimeout(resolve, 400));
 
   if (normalizedQuery.includes('thwaites') || normalizedQuery.includes('doomsday')) {
     return PRESET_AI_KNOWLEDGE.thwaites;
@@ -194,9 +164,6 @@ export async function generateContentStudioPackage(
     rawContext = `${exp.objective}\nLead: ${exp.leadScientist}\nFindings: ${exp.findingsSummary}`;
   }
 
-  // Brief latency simulation for realistic AI generation experience
-  await new Promise((resolve) => setTimeout(resolve, 850));
-
   const formatLabels: Record<OutreachFormat, string> = {
     website_article: 'Website Feature Article',
     public_article: 'Public Science Article',
@@ -210,17 +177,47 @@ export async function generateContentStudioPackage(
   };
 
   const results: GeneratedOutreachItem[] = [];
-
   const now = new Date().toISOString().split('T')[0];
 
   for (const fmt of options.formats) {
     let generatedTitle = '';
     let generatedContent = '';
+    let isLiveAiGenerated = false;
 
-    switch (fmt) {
-      case 'website_article':
-        generatedTitle = `Unlocking Polar Frontiers: Discoveries from ${sourceTitle}`;
-        generatedContent = `The scientific quest in the Earth's polar realms continues to reveal critical truths about our planet's future. Grounded in research conducted by ${sourceInstitution}, this comprehensive report illuminates the latest empirical measurements.
+    // Try server-side live Gemini 3.8 Flash generation
+    try {
+      const res = await fetch('/api/ai/generate-outreach', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceTitle,
+          sourceInstitution,
+          sourceType: options.sourceType,
+          rawContext,
+          format: fmt,
+          attachedMediaTitles: options.attachedMediaIds?.join(', '),
+          datasetTitle: options.attachedDatasetId,
+        }),
+      });
+
+      if (res.ok) {
+        const liveAiData = await res.json();
+        if (liveAiData?.title && liveAiData?.content) {
+          generatedTitle = liveAiData.title;
+          generatedContent = liveAiData.content;
+          isLiveAiGenerated = true;
+        }
+      }
+    } catch (e) {
+      console.info('[POLARIS Client] Live Gemini endpoint unavailable for format, using template generation:', e);
+    }
+
+    if (!isLiveAiGenerated) {
+      // Fallback format template
+      switch (fmt) {
+        case 'website_article':
+          generatedTitle = `Unlocking Polar Frontiers: Discoveries from ${sourceTitle}`;
+          generatedContent = `The scientific quest in the Earth's polar realms continues to reveal critical truths about our planet's future. Grounded in research conducted by ${sourceInstitution}, this comprehensive report illuminates the latest empirical measurements.
 
 Key Insights:
 ${rawContext}
@@ -230,113 +227,105 @@ Changes observed at the polar margins—such as shifts in ocean heat capacity, g
 
 Official Source & Traceability:
 This article is directly translated from the primary repository document: "${sourceTitle}" published by ${sourceInstitution}.`;
-        break;
+          break;
 
-      case 'public_article':
-        generatedTitle = `Beyond the Ice: What Scientists Discovered at the Ends of the Earth`;
-        generatedContent = `Miles away from human civilization, where temperatures regularly plummet below -40°C, scientists are deciphering ancient climate secrets. 
+        case 'public_article':
+          generatedTitle = `Beyond the Ice: What Scientists Discovered at the Ends of the Earth`;
+          generatedContent = `Miles away from human civilization, where temperatures regularly plummet below -40°C, scientists are deciphering ancient climate secrets. 
 
 Drawing from primary fieldwork documented in "${sourceTitle}", researchers have documented surprising shifts in ice dynamics and marine biology. Unlike the common belief that ice simply melts from warm air above, empirical data proves that warm deep-ocean currents are carving complex channels beneath floating ice shelves.
 
 By translating dense mathematical data into clear societal warnings, institutions like ${sourceInstitution} are helping coastal planners prepare for the decades ahead.`;
-        break;
+          break;
 
-      case 'student_explanation':
-        generatedTitle = `How Polar Scientists Solve the Big Ice Mystery (Student Edition)`;
-        generatedContent = `Have you ever wondered how scientists study a place so cold that boiling water turns to snow instantly?
+        case 'student_explanation':
+          generatedTitle = `How Polar Scientists Solve the Big Ice Mystery (Student Edition)`;
+          generatedContent = `Have you ever wondered how scientists study a place so cold that boiling water turns to snow instantly?
 
 Here is what researchers at ${sourceInstitution} found:
 Think of Antarctica like a giant frozen refrigerator with the door left cracked open. Instead of just melting like an ice cube in a glass of warm soda, the ice is being slowly melted from underneath by deep ocean currents. 
 
-Scientists dropped special instruments down through hundreds of meters of ice to measure the water temperature. What they found helps us understand how our whole planet's weather works—including the monsoons and rainfall that grow our crops back home!`;
-        break;
+Key Takeaway for Young Explorers:
+The ice you see in pictures is connected to our ocean weather and monsoon rains. Protecting it starts with understanding how the polar thermostat operates!`;
+          break;
 
-      case 'instagram_post':
-        generatedTitle = `Instagram Visual Carousel: Discoveries from ${sourceTitle.slice(0, 40)}...`;
-        generatedContent = `🧊 EXPEDITION BREAKTHROUGH: What happens when scientists explore the most isolated corners of Earth?
+        case 'instagram_post':
+          generatedTitle = `Visual Field Dispatch: ${sourceTitle.slice(0, 45)}...`;
+          generatedContent = `📍 POLAR RESEARCH DISPATCH | ${sourceInstitution}
 
-Swipe ➡️ to see the findings from ${sourceInstitution}:
+Behind the scenes of critical polar climate observation:
+${rawContext.slice(0, 220)}...
 
-1️⃣ The Mission: Documenting critical changes in polar ice sheets and ocean currents.
-2️⃣ The Method: Deep drilling, satellite radar interferometry, and autonomous submersibles.
-3️⃣ The Revelation: ${rawContext.slice(0, 140)}...
-4️⃣ Why It Matters: Protecting coastal communities and deciphering planetary climate history.
+Swipe through to see the field instrument arrays and satellite passes documenting these rapid environmental shifts.
 
-📍 Tracked in the POLARIS Central Knowledge Repository
-🔬 Source: ${sourceTitle}
+🔗 Read the full research dossier on POLARIS: polaris.gov.in/repo/${options.sourceId}
 
-#PolarScience #Cryosphere #EarthScience #MoES #Antarctica #ScienceOutreach #SmartEducation #Oceanography`;
-        break;
+#PolarScience #Antarctica #ClimateResearch #NCPOR #MoES #FieldWork`;
+          break;
 
-      case 'linkedin_post':
-        generatedTitle = `Scientific Research Update: ${sourceTitle.slice(0, 50)}...`;
-        generatedContent = `Advancing empirical cryospheric research and climate resilience:
+        case 'linkedin_post':
+          generatedTitle = `Institutional Scientific Milestone: ${sourceTitle.slice(0, 50)}`;
+          generatedContent = `We are pleased to share the newly archived scientific findings from ${sourceInstitution}: "${sourceTitle}".
 
-The latest research documented in "${sourceTitle}" by ${sourceInstitution} presents vital ground-truth data for glaciologists, climate modellers, and policymakers.
+Key Technical Takeaways:
+• Empirical synthesis across high-latitude monitoring arrays
+• Comprehensive ground-truthing verifying orbital satellite sensors
+• Direct implications for coastal infrastructure planning and climate risk models
 
-Key Findings:
-• ${rawContext.slice(0, 180)}...
-• Multi-parameter sensor telemetry cross-validated against satellite radar data.
-• Direct implications for coastal infrastructure planning and climate risk assessment.
+Full research paper, telemetry data feeds, and expedition field logs are publicly accessible on the POLARIS Knowledge Portal.
 
-Full open-access documentation and datasets are archived in the POLARIS Knowledge Repository:
-🔗 Source: ${sourceTitle} (${sourceInstitution})
+#EarthSciences #Geophysics #Cryosphere #OpenScience #MoES #ResearchLeadership`;
+          break;
 
-#EarthSciences #ClimateAction #OceanEngineering #Geophysics #PolarisPortal`;
-        break;
+        case 'x_post':
+          generatedTitle = `Thread: Key Findings from ${sourceTitle.slice(0, 40)}`;
+          generatedContent = `🧵 1/4 How is the Earth's polar thermostat responding to warming deep waters? A new study from ${sourceInstitution} provides crucial empirical observations.
 
-      case 'x_post':
-        generatedTitle = `X / Twitter Thread (4 Posts) on ${sourceTitle.slice(0, 35)}...`;
-        generatedContent = `🧵 1/4 NEW RESEARCH: Groundbreaking field findings released by ${sourceInstitution}: "${sourceTitle}". Here is what you need to know:
+2/4 Key Data:
+${rawContext.slice(0, 180)}
 
-❄️ 2/4 What was discovered? ${rawContext.slice(0, 160)}...
+3/4 Satellite InSAR radar altimetry confirms high flow velocities along the glacier grounding zone, pointing to active oceanic thermodynamic forcing.
 
-🌊 3/4 Why it matters: Polar ice shifts directly govern global ocean currents and planetary energy balance. What happens at 70°S impacts rainfall and sea levels worldwide.
+4/4 Explore the open peer-reviewed dataset and interactive map on POLARIS ➡️ https://polaris.gov.in/item/${options.sourceId}`;
+          break;
 
-📖 4/4 Explore the raw expedition logs, peer-reviewed publications, and verified datasets on POLARIS: https://polaris.org/repository/${options.sourceId}`;
-        break;
+        case 'youtube_description':
+          generatedTitle = `POLARIS Expedition Documentary: ${sourceTitle}`;
+          generatedContent = `Official documentary video record documenting research by ${sourceInstitution}.
 
-      case 'youtube_description':
-        generatedTitle = `YouTube Video Description & Timestamps: ${sourceTitle.slice(0, 45)}`;
-        generatedContent = `In this documentary deep-dive, we follow the scientists of ${sourceInstitution} on an unprecedented polar scientific campaign.
+00:00 - Expedition Deployment & Transit
+01:30 - Autonomous Oceanic Glider Deployment
+03:45 - Ice Core Extraction on Queen Maud Land
+06:10 - Grounding Zone Radar Profiling
+08:20 - Scientific Conclusions & Climate Outlook
 
-Source Document: "${sourceTitle}"
-Archived by: Ministry of Earth Sciences (MoES) / POLARIS Central Repository
+Archived Document ID: ${options.sourceId}
+Repository: POLARIS (Ministry of Earth Sciences)
+Learn more: https://polaris.gov.in`;
+          break;
 
-TIMESTAMPS:
-0:00 - Introduction: The Extremes of Polar Research
-2:15 - Logistics & Deployment in the Cryosphere
-5:30 - Key Discoveries & Data Analysis
-8:45 - The Human Dimension: Wintering Over
-11:20 - Societal Impact & Global Sea Levels
-14:00 - Open Science & Where to Read the Report
+        case 'video_script':
+          generatedTitle = `Video Script: The Story of ${sourceTitle.slice(0, 40)}`;
+          generatedContent = `[SCENE 1 - 0:00-0:15]
+(VISUAL: Drone shot of vast Antarctic ice shelf with research vessel MV Vasiliy Golovnin in distance)
+(NARRATOR): At the bottom of our world, temperatures drop below minus forty. But the real story is what's happening underneath the ice.
 
-Learn more and explore the full dataset at POLARIS: https://polaris.org`;
-        break;
+[SCENE 2 - 0:15-0:35]
+(VISUAL: Scientists deploying a deep-sea CTD probe into dark icy water)
+(NARRATOR): Research led by ${sourceInstitution} reveals that ocean currents are carrying warm water directly to the foundation of these massive ice sheets.
 
-      case 'video_script':
-        generatedTitle = `60-Second Reel / Short Video Script: ${sourceTitle.slice(0, 40)}`;
-        generatedContent = `[HOOK - 0:00 to 0:05]
-(Visual: Drone shot over endless blue ice crevasses)
-NARRATOR (Energetic): "Beneath 600 meters of solid ice, scientists just discovered something that changes how we see our entire planet."
+[SCENE 3 - 0:35-0:50]
+(VISUAL: Satellite animation showing ice flow velocities)
+(NARRATOR): Every millimeter of ice loss here has repercussions for coastal cities thousands of miles away.
 
-[THE DISCOVERY - 0:05 to 0:25]
-(Visual: Robotic submersible lowered into borehole; flashing sensor readouts)
-NARRATOR: "This new report from ${sourceInstitution} reveals that polar ice isn't just melting from the air above. Deep, warm ocean water is cutting underneath like an invisible blowtorch."
+[SCENE 4 - 0:50-1:00]
+(VISUAL: POLARIS logo and website call-to-action)
+(NARRATOR): Learn more and inspect the verified data on POLARIS. Science for our shared future.`;
+          break;
 
-[THE STAKES - 0:25 to 0:45]
-(Visual: Split screen of Antarctic ice stream and world map of coastal cities)
-NARRATOR: "Every cubic kilometer of ice that drains into the ocean ripples out into rising sea levels and altered weather patterns across the globe."
-
-[CALL TO ACTION - 0:45 to 0:60]
-(Visual: POLARIS interactive portal screen with verified source citation)
-NARRATOR: "Don't just take our word for it—read the verified expedition logs and open datasets directly on POLARIS. Link in bio!"`;
-        break;
-
-      case 'infographic_content':
-        generatedTitle = `Infographic Fact Sheet: Quick Stats on ${sourceTitle.slice(0, 40)}`;
-        generatedContent = `📊 INFOGRAPHIC DATA SPECIFICATION:
----------------------------------------------
+        case 'infographic_content':
+          generatedTitle = `Infographic Brief: ${sourceTitle}`;
+          generatedContent = `INFOGRAPHIC SPECIFICATION SHEET
 HEADER: ${sourceTitle}
 ORGANIZATION: ${sourceInstitution}
 
@@ -354,7 +343,8 @@ KEY METRIC 3: Atmospheric Deposition
 
 SOURCE CITATION:
 Document ID: ${options.sourceId} | POLARIS Knowledge Repository`;
-        break;
+          break;
+      }
     }
 
     const item: GeneratedOutreachItem = {
@@ -372,7 +362,9 @@ Document ID: ${options.sourceId} | POLARIS Knowledge Repository`;
       updatedAt: now,
       attachedMediaIds: options.attachedMediaIds || [],
       attachedDatasetId: options.attachedDatasetId,
-      reviewNotes: 'Generated by POLARIS Content Studio. Awaiting scientific peer verification before publication.',
+      reviewNotes: isLiveAiGenerated
+        ? 'Generated via Gemini 3.8 Flash server-side integration. Awaiting editorial sign-off.'
+        : 'Generated by POLARIS Content Studio engine. Awaiting editorial sign-off.',
       publishedChannels: [],
       targetAudience: options.targetAudience || 'General Public & Educators',
       readingLevel: options.readingLevel || 'Grade 8 (Accessible)',

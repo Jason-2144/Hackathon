@@ -165,23 +165,23 @@ export const DemoFlowBanner: React.FC<DemoFlowBannerProps> = ({
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-3xl bg-[#0c1220]/95 backdrop-blur-md border border-slate-700/80 rounded-lg p-4 shadow-2xl text-white">
-      <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-2.5">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-3xl bg-[#002244] border-2 border-[#003870] p-4 shadow-xl text-white font-sans">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-700/80 pb-2">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded border border-slate-700 bg-slate-900 text-sky-400 flex items-center justify-center">
+          <div className="w-5 h-5 bg-[#003870] text-sky-300 flex items-center justify-center">
             <Play className="w-2.5 h-2.5 fill-current" />
           </div>
-          <span className="text-xs font-semibold font-mono text-slate-200 uppercase tracking-wider">
-            Official PS 26063 Golden Demo Flow
+          <span className="text-xs font-bold font-mono text-slate-100 uppercase tracking-wider">
+            Official PS 26063 Golden Demo Tour
           </span>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-slate-300 font-mono">
             (Step {step.stepNumber} of {OFFICIAL_DEMO_STEPS.length})
           </span>
         </div>
 
         <button
           onClick={onClose}
-          className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 cursor-pointer transition-colors"
+          className="text-slate-300 hover:text-white p-1 hover:bg-[#003366] cursor-pointer"
           title="Exit Tour"
         >
           <X className="w-4 h-4" />
@@ -194,14 +194,14 @@ export const DemoFlowBanner: React.FC<DemoFlowBannerProps> = ({
           <div className="text-sm font-bold text-white flex items-center gap-2">
             <span>{step.title}</span>
           </div>
-          <div className="text-xs text-slate-300 mt-0.5 leading-relaxed">{step.description}</div>
+          <div className="text-xs text-slate-200 mt-0.5 leading-relaxed">{step.description}</div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
           <button
             onClick={handlePrev}
             disabled={currentStepIndex === 0}
-            className="p-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 disabled:opacity-30 text-slate-300 cursor-pointer transition-colors"
+            className="p-1.5 bg-[#001730] hover:bg-[#002b49] border border-slate-600 disabled:opacity-30 text-slate-300 cursor-pointer"
             title="Previous step"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -210,7 +210,7 @@ export const DemoFlowBanner: React.FC<DemoFlowBannerProps> = ({
           <button
             onClick={handleNext}
             disabled={currentStepIndex === OFFICIAL_DEMO_STEPS.length - 1}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-sky-400 hover:bg-sky-300 disabled:opacity-30 text-slate-950 text-xs font-semibold cursor-pointer shadow transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#004c99] hover:bg-[#005cb8] border border-sky-400 disabled:opacity-30 text-white text-xs font-semibold cursor-pointer shadow-sm transition-all"
           >
             <span>Next Step</span>
             <ChevronRight className="w-4 h-4" />
@@ -224,12 +224,12 @@ export const DemoFlowBanner: React.FC<DemoFlowBannerProps> = ({
           <button
             key={s.stepNumber}
             onClick={() => jumpToStep(idx)}
-            className={`h-1 flex-1 rounded-sm transition-all cursor-pointer ${
+            className={`h-1 flex-1 transition-all cursor-pointer ${
               idx === currentStepIndex
                 ? 'bg-sky-400'
                 : idx < currentStepIndex
-                ? 'bg-sky-600/50'
-                : 'bg-slate-800'
+                ? 'bg-[#004c99]'
+                : 'bg-slate-700'
             }`}
             title={`Step ${s.stepNumber}: ${s.title}`}
           />

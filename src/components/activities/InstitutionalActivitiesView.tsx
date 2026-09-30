@@ -7,13 +7,9 @@ import {
   MapPin,
   Users,
   Compass,
-  Award,
   Video,
-  FileText,
   Sparkles,
   ArrowRight,
-  Filter,
-  CheckCircle,
   ExternalLink
 } from 'lucide-react';
 
@@ -48,31 +44,31 @@ export const InstitutionalActivitiesView: React.FC<InstitutionalActivitiesViewPr
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header */}
-      <div className="space-y-2 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* 1. Header */}
+      <div className="border-b border-slate-300 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase mb-1">
-            <Building className="w-3.5 h-3.5 text-sky-400" />
-            <span>Ministry of Earth Sciences (MoES) & Institutional Milestones</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Institutional Activities
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#003366]">
+            Official Institutional Ledger · Ministry of Earth Sciences (MoES)
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#002244] tracking-tight mt-1">
+            Institutional Activities & Outreach Programs
           </h1>
-          <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
-            Chronicle of polar expedition flag-offs, international scientific conferences, national outreach forums, Smart Education broadcasts, and institutional achievements.
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+            Official chronological chronicle of polar expedition flag-offs, international Antarctic Treaty conferences, national student outreach seminars, and institutional achievements.
           </p>
         </div>
 
-        {/* Status quick chips */}
-        <div className="flex items-center gap-1 self-start md:self-auto bg-slate-900 border border-slate-800 p-0.5 rounded text-xs">
+        {/* Status Filter */}
+        <div className="flex items-center gap-1 border border-slate-300 bg-white p-1 text-xs self-start md:self-auto font-mono">
+          <span className="text-slate-500 pl-2">Status:</span>
           {['All', 'Completed', 'Upcoming'].map((st) => (
             <button
               key={st}
               onClick={() => setSelectedStatus(st)}
-              className={`px-3 py-1 rounded transition-colors cursor-pointer text-xs font-medium ${
+              className={`px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors ${
                 selectedStatus === st
-                  ? 'bg-slate-800 text-white font-semibold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#002244] text-white font-bold'
+                  : 'text-slate-700 hover:bg-slate-100'
               }`}
             >
               {st}
@@ -81,16 +77,17 @@ export const InstitutionalActivitiesView: React.FC<InstitutionalActivitiesViewPr
         </div>
       </div>
 
-      {/* Filter Tabs by Activity Type */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+      {/* 2. Type Filter Strip */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 text-xs border-b border-slate-200">
+        <span className="text-slate-500 font-mono text-[11px] mr-2 shrink-0">Filter Event Type:</span>
         {types.map((t) => (
           <button
             key={t}
             onClick={() => setSelectedType(t)}
-            className={`px-3 py-1 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+            className={`px-3 py-1 font-medium whitespace-nowrap cursor-pointer transition-colors border ${
               selectedType === t
-                ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
-                : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800/80'
+                ? 'bg-[#002244] text-white border-[#001730] font-semibold'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
             }`}
           >
             {t}
@@ -98,105 +95,80 @@ export const InstitutionalActivitiesView: React.FC<InstitutionalActivitiesViewPr
         ))}
       </div>
 
-      {/* Timeline / Activities Feed */}
-      <div className="space-y-6 relative before:absolute before:inset-0 before:left-4 sm:before:left-6 before:h-full before:w-px before:bg-slate-800">
-        {filteredActivities.map((act) => (
-          <div key={act.id} className="relative pl-10 sm:pl-16 group">
-            {/* Timeline Node Icon */}
-            <div className="absolute left-2 sm:left-4 top-4 -translate-x-1/2 w-4 h-4 rounded-full bg-slate-950 border border-sky-400 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-            </div>
-
-            {/* Activity Card */}
-            <div className="bg-[#0b101d] hover:bg-[#0e1526] border border-slate-800 hover:border-slate-700 rounded-lg p-5 sm:p-6 space-y-4 shadow transition-all">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
-                <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-                  <span className="ds-badge ds-badge-neutral">
+      {/* 3. Chronological Institutional Ledger Table */}
+      <div className="overflow-x-auto border border-slate-300 bg-white">
+        <table className="inst-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Activity Title & Scope</th>
+              <th>Category</th>
+              <th>Organization</th>
+              <th>Location</th>
+              <th>Lead Coordinator</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredActivities.map((act) => (
+              <tr key={act.id}>
+                <td className="font-mono text-xs text-slate-600 whitespace-nowrap">
+                  {act.date}
+                </td>
+                <td>
+                  <div className="font-bold text-[#002244] text-xs sm:text-sm">{act.title}</div>
+                  <div className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                    {act.summary}
+                  </div>
+                  {act.participantsCount && (
+                    <div className="text-[10px] font-mono text-emerald-800 mt-1">
+                      Participation: {act.participantsCount.toLocaleString()} researchers & students engaged
+                    </div>
+                  )}
+                </td>
+                <td>
+                  <span className="ds-badge ds-badge-neutral text-[10px]">
                     {act.type}
                   </span>
-                  {act.badgeText && (
-                    <span className="ds-badge ds-badge-accent text-[10px]">
-                      {act.badgeText}
-                    </span>
-                  )}
-                  <span className="text-slate-400 text-[11px]">{act.date}</span>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono">
-                  <MapPin className="w-3.5 h-3.5 text-sky-400" />
-                  <span>{act.location}</span>
-                </div>
-              </div>
-
-              {/* Title & Organization */}
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white group-hover:text-sky-200 transition-colors">
-                  {act.title}
-                </h3>
-                <div className="text-xs font-mono text-slate-400">
-                  Organized by: <span className="text-slate-200 font-medium">{act.institution}</span>
-                </div>
-              </div>
-
-              {/* Summary and Description */}
-              <div className="space-y-1.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
-                <p className="font-medium text-slate-200">{act.summary}</p>
-                <p className="text-slate-400 text-xs leading-relaxed">{act.description}</p>
-              </div>
-
-              {/* Co-ordinators & Participants */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-900/90 rounded border border-slate-800 text-xs font-mono">
-                <div>
-                  <span className="text-slate-500 block text-[10px] uppercase">Lead Coordinator:</span>
-                  <span className="text-slate-200">{act.leadCoordinator}</span>
-                </div>
-                {act.participantsCount && (
-                  <div>
-                    <span className="text-slate-500 block text-[10px] uppercase">Participants Engaged:</span>
-                    <span className="text-emerald-400 font-medium">{act.participantsCount.toLocaleString()} Students & Researchers</span>
+                </td>
+                <td className="text-xs text-slate-700 font-medium">
+                  {act.institution}
+                </td>
+                <td className="text-xs text-slate-600 font-mono whitespace-nowrap">
+                  {act.location}
+                </td>
+                <td className="text-xs text-slate-700">
+                  {act.leadCoordinator}
+                </td>
+                <td>
+                  <div className="flex flex-col gap-1 text-xs">
+                    <button
+                      onClick={() =>
+                        onNavigate('studio', {
+                          sourceId: act.id,
+                          sourceType: 'Activity',
+                        })
+                      }
+                      className="text-xs font-semibold text-[#004c99] hover:underline cursor-pointer whitespace-nowrap text-left"
+                    >
+                      Draft Press Release →
+                    </button>
+                    {act.relatedExpeditionId && (
+                      <button
+                        onClick={() =>
+                          onNavigate('expeditions', { expeditionId: act.relatedExpeditionId })
+                        }
+                        className="text-[11px] font-mono text-slate-500 hover:text-slate-900 cursor-pointer text-left"
+                      >
+                        Expedition Dossier
+                      </button>
+                    )}
                   </div>
-                )}
-              </div>
-
-              {/* Connected Scientific Entities & Actions */}
-              <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  {act.relatedExpeditionId && (
-                    <button
-                      onClick={() => onNavigate('expeditions', { expeditionId: act.relatedExpeditionId })}
-                      className="text-sky-400 hover:underline flex items-center gap-1 cursor-pointer font-mono text-[11px]"
-                    >
-                      <Compass className="w-3.5 h-3.5" />
-                      <span>Connected Expedition →</span>
-                    </button>
-                  )}
-                  {act.relatedMediaIds && act.relatedMediaIds.length > 0 && (
-                    <button
-                      onClick={() => onNavigate('media')}
-                      className="text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer font-mono text-[11px]"
-                    >
-                      <Video className="w-3.5 h-3.5" />
-                      <span>Event Photography/Video →</span>
-                    </button>
-                  )}
-                </div>
-
-                <button
-                  onClick={() =>
-                    onNavigate('studio', {
-                      sourceId: act.id,
-                      sourceType: 'Activity',
-                    })
-                  }
-                  className="ds-btn-primary text-xs py-1.5 px-3"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                  <span>Generate Outreach Article</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

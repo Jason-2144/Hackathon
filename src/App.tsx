@@ -35,11 +35,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060913] text-slate-100 flex flex-col font-sans selection:bg-sky-500/20 selection:text-sky-200">
-      {/* Top Navigation Bar with 3-Zone Contract */}
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* Top Institutional Header and Navigation */}
       <Header
         activeTab={activeTab}
-        setActiveTab={(tab) => handleNavigate(tab)}
+        setActiveTab={(tab, params) => handleNavigate(tab, params)}
         onStartDemoTour={() => setDemoTourActive(true)}
       />
 
@@ -54,10 +54,17 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'repository' && (
+        {(activeTab === 'repository' || activeTab === 'publications' || activeTab === 'datasets') && (
           <KnowledgeRepositoryView
             onNavigate={handleNavigate}
             prefillLocationId={navigationParams.locationId}
+            prefillContentType={
+              activeTab === 'publications'
+                ? 'Publication'
+                : activeTab === 'datasets'
+                ? 'Dataset'
+                : navigationParams.contentType
+            }
           />
         )}
 
