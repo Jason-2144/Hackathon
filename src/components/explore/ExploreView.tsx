@@ -58,33 +58,33 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Page Title & Region Segmented Switch */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono tracking-widest uppercase mb-1">
-            <Compass className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase mb-1">
+            <Compass className="w-3.5 h-3.5 text-sky-400" />
             <span>Interactive Polar Cartography</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Explore Polar Regions
           </h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+          <p className="text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
             Examine high-latitude research stations, rapidly retreating ice streams, ecological reserves, and satellite telemetry across both planetary poles.
           </p>
         </div>
 
-        {/* Region Switcher Tabs (Buttons with click handlers per frontend-design skill) */}
-        <div className="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl self-start md:self-auto">
+        {/* Region Switcher Tabs */}
+        <div className="inline-flex p-0.5 bg-slate-900 border border-slate-800 rounded self-start md:self-auto">
           <button
             onClick={() => {
               setRegion('Antarctica');
               const antLoc = locations.find((l) => l.region === 'Antarctica');
               if (antLoc) setSelectedLocation(antLoc);
             }}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-all cursor-pointer whitespace-nowrap ${
               region === 'Antarctica'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                ? 'bg-slate-800 text-white font-semibold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -96,9 +96,9 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
               const arcLoc = locations.find((l) => l.region === 'Arctic');
               if (arcLoc) setSelectedLocation(arcLoc);
             }}
-            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+            className={`px-3 py-1.5 text-xs font-medium rounded transition-all cursor-pointer whitespace-nowrap ${
               region === 'Arctic'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                ? 'bg-slate-800 text-white font-semibold'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -108,16 +108,16 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
       </div>
 
       {/* Category Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <span className="text-xs text-slate-500 font-mono shrink-0 mr-1">Filter Sites:</span>
+      <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
+        <span className="text-xs text-slate-400 font-mono shrink-0 mr-1">Filter Sites:</span>
         {categories.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
+            className={`px-3 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap cursor-pointer ${
               activeCategory === cat
-                ? 'bg-cyan-600 text-white shadow-sm'
-                : 'bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
+                : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800/80'
             }`}
           >
             {cat}
@@ -126,9 +126,9 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
       </div>
 
       {/* Main Split Layout: Interactive Map + Detailed Location Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Map Projection Canvas */}
-        <div className="lg:col-span-6 space-y-4">
+        <div className="lg:col-span-6 space-y-3">
           <PolarMapCanvas
             region={region}
             locations={locations}
@@ -137,23 +137,23 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
             activeCategory={activeCategory}
           />
 
-          {/* Quick Location Pills Bar */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
+          {/* Quick Location Buttons Bar */}
+          <div className="bg-[#0b101d] border border-slate-800 rounded-lg p-3">
             <div className="text-[11px] font-mono text-slate-400 mb-2 flex items-center justify-between">
               <span>Quick Jump Locations ({region}):</span>
-              <span className="text-cyan-400">Click to Inspect</span>
+              <span className="text-sky-400">Click to Inspect</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {locations
                 .filter((l) => l.region === region || l.region === 'Global Polar')
                 .map((loc) => (
                   <button
                     key={loc.id}
                     onClick={() => setSelectedLocation(loc)}
-                    className={`px-2.5 py-1 text-xs rounded-md transition-all cursor-pointer ${
+                    className={`px-2 py-1 text-xs rounded transition-all cursor-pointer font-mono text-[11px] ${
                       selectedLocation.id === loc.id
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
-                        : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700/50'
+                        ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
+                        : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                     }`}
                   >
                     {loc.name}
@@ -164,36 +164,36 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
         </div>
 
         {/* Right: Detailed Location Inspector Panel */}
-        <div className="lg:col-span-6 bg-slate-900/70 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm space-y-6">
+        <div className="lg:col-span-6 bg-[#0b101d] border border-slate-800 rounded-lg p-5 sm:p-6 space-y-5">
           {/* Header & Badges */}
           <div>
             <div className="flex items-center justify-between gap-2 mb-2 text-xs text-slate-400 font-mono">
               <div className="flex items-center gap-2">
-                <span className="text-cyan-400 font-semibold uppercase">{selectedLocation.category}</span>
-                <span aria-hidden="true">·</span>
+                <span className="ds-badge ds-badge-neutral">{selectedLocation.category}</span>
+                <span aria-hidden="true" className="text-slate-600">·</span>
                 <span>{selectedLocation.region}</span>
               </div>
-              <span className="px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/50 text-cyan-300 text-[10px]">
+              <span className="ds-badge ds-badge-neutral text-[10px]">
                 {selectedLocation.currentStatus}
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {selectedLocation.name}
             </h2>
-            <div className="text-xs font-mono text-slate-400 mt-1 flex flex-wrap gap-3">
+            <div className="text-xs font-mono text-slate-400 mt-1 flex flex-wrap gap-2">
               <span>
                 Coordinates: {selectedLocation.coordinates.lat.toFixed(2)}°, {selectedLocation.coordinates.lng.toFixed(2)}°
               </span>
               {selectedLocation.coordinates.elevationMeters !== undefined && (
                 <>
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true" className="text-slate-600">·</span>
                   <span>Elevation: {selectedLocation.coordinates.elevationMeters}m</span>
                 </>
               )}
               {selectedLocation.operatingCountry && (
                 <>
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true" className="text-slate-600">·</span>
                   <span className="text-slate-300">{selectedLocation.operatingCountry}</span>
                 </>
               )}
@@ -201,36 +201,36 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
           </div>
 
           {/* Telemetry Metrics Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-slate-900 rounded border border-slate-800">
             <div>
               <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400">
                 Temp Anomaly
               </div>
-              <div className="text-xl font-bold font-mono text-cyan-300 mt-0.5">
+              <div className="text-xl font-bold font-mono text-white mt-0.5">
                 +{selectedLocation.temperatureAnomalyC}°C
               </div>
-              <div className="text-[10px] text-slate-500">Above 1981-2010 base</div>
+              <div className="text-[10px] text-slate-500 font-mono">Above baseline</div>
             </div>
 
             {selectedLocation.iceVelocityMetersPerYear !== undefined ? (
               <div>
                 <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400">
-                  Ice Stream Velocity
+                  Ice Velocity
                 </div>
-                <div className="text-xl font-bold font-mono text-amber-300 mt-0.5">
+                <div className="text-xl font-bold font-mono text-white mt-0.5">
                   {selectedLocation.iceVelocityMetersPerYear.toLocaleString()} m/yr
                 </div>
-                <div className="text-[10px] text-slate-500">Sentinel-1 InSAR</div>
+                <div className="text-[10px] text-slate-500 font-mono">Sentinel-1 InSAR</div>
               </div>
             ) : (
               <div>
                 <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400">
-                  Observation Status
+                  Observation
                 </div>
-                <div className="text-xl font-bold font-mono text-emerald-400 mt-0.5">
+                <div className="text-xl font-bold font-mono text-white mt-0.5">
                   24/7 Monitored
                 </div>
-                <div className="text-[10px] text-slate-500">Continuous telemetry</div>
+                <div className="text-[10px] text-slate-500 font-mono">Continuous telemetry</div>
               </div>
             )}
 
@@ -238,32 +238,32 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
               <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400">
                 Data Links
               </div>
-              <div className="text-xl font-bold font-mono text-white mt-0.5">
+              <div className="text-xl font-bold font-mono text-sky-400 mt-0.5">
                 {relatedResearch.length + relatedDatasets.length} Records
               </div>
-              <div className="text-[10px] text-slate-500">Peer-reviewed / Open</div>
+              <div className="text-[10px] text-slate-500 font-mono">Open / Verified</div>
             </div>
           </div>
 
           {/* Description & Significance */}
-          <div className="space-y-3 text-sm leading-relaxed text-slate-300">
+          <div className="space-y-2 text-sm leading-relaxed text-slate-300">
             <p>{selectedLocation.summary}</p>
-            <div className="p-3 bg-cyan-950/20 border-l-2 border-cyan-400 rounded-r-lg text-slate-300 text-xs">
-              <span className="font-semibold text-cyan-300 block mb-1">Scientific Significance:</span>
-              {selectedLocation.scientificSignificance}
+            <div className="p-3 bg-slate-900 border-l-2 border-sky-400 rounded-r text-slate-300 text-xs">
+              <span className="font-semibold text-white block mb-0.5">Scientific Significance:</span>
+              <span className="text-slate-400">{selectedLocation.scientificSignificance}</span>
             </div>
           </div>
 
           {/* Key Findings Checklist */}
           {selectedLocation.keyFindings && selectedLocation.keyFindings.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs uppercase font-mono tracking-wider text-slate-400">
+            <div className="space-y-1.5">
+              <h3 className="text-[11px] uppercase font-mono tracking-wider text-slate-400">
                 Key Empirical Observations
               </h3>
               <ul className="space-y-1.5 text-xs text-slate-300">
                 {selectedLocation.keyFindings.map((finding, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0 mt-0.5" />
                     <span>{finding}</span>
                   </li>
                 ))}
@@ -271,53 +271,53 @@ export const ExploreView: React.FC<ExploreViewProps> = ({ onNavigate, initialLoc
             </div>
           )}
 
-          {/* Action Buttons Hub (Required by problem statement) */}
-          <div className="pt-2 border-t border-slate-800 space-y-3">
-            <div className="text-xs font-mono text-slate-400">Scientific Actions:</div>
+          {/* Action Buttons Hub */}
+          <div className="pt-3 border-t border-slate-800 space-y-2.5">
+            <div className="text-[11px] font-mono text-slate-400">Scientific Actions:</div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 onClick={() => onNavigate('repository', { locationId: selectedLocation.id })}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors cursor-pointer"
+                className="ds-btn-secondary text-xs py-1.5 px-2.5 justify-center"
               >
-                <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                <FileText className="w-3.5 h-3.5 text-slate-300" />
                 <span>Read Research</span>
               </button>
 
               <button
                 onClick={() => onNavigate('visualizations', { locationId: selectedLocation.id })}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors cursor-pointer"
+                className="ds-btn-secondary text-xs py-1.5 px-2.5 justify-center"
               >
-                <Database className="w-3.5 h-3.5 text-emerald-400" />
+                <Database className="w-3.5 h-3.5 text-slate-300" />
                 <span>View Data</span>
               </button>
 
               <button
                 onClick={() => onNavigate('media', { locationId: selectedLocation.id })}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors cursor-pointer"
+                className="ds-btn-secondary text-xs py-1.5 px-2.5 justify-center"
               >
-                <Film className="w-3.5 h-3.5 text-purple-400" />
+                <Film className="w-3.5 h-3.5 text-slate-300" />
                 <span>View Media</span>
               </button>
 
               <button
                 onClick={() => onNavigate('ai', { query: `Tell me about ${selectedLocation.name}` })}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r from-cyan-700 to-blue-700 hover:from-cyan-600 hover:to-blue-600 rounded-lg transition-all cursor-pointer shadow-sm"
+                className="ds-btn-primary text-xs py-1.5 px-2.5 justify-center"
               >
-                <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
                 <span>Ask Polar AI</span>
               </button>
             </div>
 
             {/* Standout feature shortcut: Turn into Story */}
             <button
-              onClick={() => onNavigate('story-studio', { locationId: selectedLocation.id })}
-              className="w-full mt-2 flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-cyan-300 bg-cyan-950/40 hover:bg-cyan-950/60 border border-cyan-500/40 rounded-xl transition-all cursor-pointer group"
+              onClick={() => onNavigate('studio', { sourceId: selectedLocation.relatedResearchIds?.[0] || 'res-thwaites-grounding', sourceType: 'Publication' })}
+              className="w-full flex items-center justify-between p-3 text-xs font-semibold text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-cyan-400" />
-                <span>Turn this site's research into a Public Story</span>
+                <BookOpen className="w-4 h-4 text-sky-400" />
+                <span>Create Outreach Content from this Site</span>
               </div>
-              <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 text-sky-400 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>

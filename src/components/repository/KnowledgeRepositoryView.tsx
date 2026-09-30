@@ -1,6 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { PolarRepository } from '../../lib/supabase';
-import { ResearchItem, ContentType, PolarRegion } from '../../types/polar';
+import {
+  ResearchItem,
+  ExpeditionReport,
+  PolarDataset,
+  MediaItem,
+  InstitutionalActivity,
+  ContentType
+} from '../../types/polar';
 import {
   Search,
   Filter,
@@ -20,7 +27,11 @@ import {
   ArrowRight,
   BookOpen,
   X,
-  Share2
+  Share2,
+  Layers,
+  Download,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 
 interface KnowledgeRepositoryViewProps {
@@ -33,344 +44,503 @@ export const KnowledgeRepositoryView: React.FC<KnowledgeRepositoryViewProps> = (
   prefillLocationId,
 }) => {
   const researchItems = PolarRepository.getResearch();
+  const reports = PolarRepository.getExpeditionReports();
   const datasets = PolarRepository.getDatasets();
+  const mediaItems = PolarRepository.getMedia();
+  const activities = PolarRepository.getActivities();
 
-  // Search & Filters State
+  // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
-  const [selectedYear, setSelectedYear] = useState<string>('All');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedRegion, setSelectedRegion] = useState<string>('All');
+  const [sortBy, setSortBy] = useState<'relevance' | 'newest' | 'citations'>('relevance');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  // Modal inspection state
-  const [activeItem, setActiveItem] = useState<ResearchItem | null>(null);
-  const [copiedDoi, setCopiedDoi] = useState(false);
+  // Active preview modal state
+  const [activeItem, setActiveItem] = useState<any>(null);
+  const [activeItemType, setActiveItemType] = useState<string>('');
+  const [copiedCitation, setCopiedCitation] = useState(false);
 
-  // Content type tags mapping
-  const contentTypes = [
+  // Content type categories per official requirements
+  const types = [
     'All',
-    'Research Paper',
-    'Scientific Report',
-    'Dataset',
-    'Satellite Data',
+    'Expedition Reports',
+    'Publications',
+    'Datasets',
+    'Photographs',
+    'Videos',
+    'Institutional Activities',
   ];
 
-  const regions = ['All', 'Antarctica', 'Arctic', 'Global Polar'];
-  const years = ['All', '2025', '2024', '2023'];
-  const categories = [
-    'All',
-    'Glaciology & Ocean Dynamics',
-    'Climate & Sea Ice',
-    'Atmospheric Physics',
-    'Polar Ecology',
-    'Geology & Geophysics',
-  ];
+  // Unified items list with normalized searchable structure
+  const unifiedItems = useMemo(() => {
+    const list: any[] = [];
 
-  // Filtering Logic
+    // 1. Reports
+    reports.forEach((r) => {
+      list.push({
+        id: r.id,
+        raw: r,
+        categoryType: 'Expedition Reports',
+        title: r.title,
+        secondaryText: `Report #${r.reportNumber} · Lead: ${r.leadAuthor}`,
+        abstract: r.summary,
+        institution: r.institution,
+        year: 2025,
+        region: 'Antarctica',
+        connectedExpeditionId: r.expeditionId,
+        connectedDatasetIds: r.relatedDatasetIds,
+        connectedMediaIds: r.relatedMediaIds,
+      });
+    });
+
+    // 2. Publications
+    researchItems.forEach((p) => {
+      list.push({
+        id: p.id,
+        raw: p,
+        categoryType: 'Publications',
+        title: p.title,
+        secondaryText: `${p.authors.join(', ')} · DOI: ${p.doi}`,
+        abstract: p.abstract,
+        institution: p.institution,
+        year: p.year,
+        region: p.region,
+        connectedExpeditionId: p.relatedExpeditionId,
+        connectedDatasetIds: p.datasetIds,
+        connectedMediaIds: p.relatedMediaIds,
+      });
+    });
+
+    // 3. Datasets
+    datasets.forEach((d) => {
+      list.push({
+        id: d.id,
+        raw: d,
+        categoryType: 'Datasets',
+        title: d.title,
+        secondaryText: `Format: ${d.fileFormat} · ${d.temporalCoverage}`,
+        abstract: d.description,
+        institution: d.provider,
+        year: 2024,
+        region: d.region,
+        connectedExpeditionId: d.relatedExpeditionId,
+      });
+    });
+
+    // 4. Media
+    mediaItems.forEach((m) => {
+      list.push({
+        id: m.id,
+        raw: m,
+        categoryType: m.type === 'video' ? 'Videos' : 'Photographs',
+        title: m.title,
+        secondaryText: `Creator: ${m.creator} · ${m.date}`,
+        abstract: m.description,
+        institution: m.institution || 'Ministry of Earth Sciences (MoES)',
+        year: 2024,
+        region: m.region,
+        connectedExpeditionId: m.relatedExpeditionId,
+        thumbnailUrl: m.thumbnailUrl,
+      });
+    });
+
+    // 5. Activities
+    activities.forEach((a) => {
+      list.push({
+        id: a.id,
+        raw: a,
+        categoryType: 'Institutional Activities',
+        title: a.title,
+        secondaryText: `${a.type} · ${a.date} · ${a.location}`,
+        abstract: a.summary,
+        institution: a.institution,
+        year: 2025,
+        region: 'Global Polar',
+        connectedExpeditionId: a.relatedExpeditionId,
+      });
+    });
+
+    return list;
+  }, [researchItems, reports, datasets, mediaItems, activities]);
+
+  // Filtered and sorted items
   const filteredItems = useMemo(() => {
-    return researchItems.filter((item) => {
-      // Search text
+    return unifiedItems.filter((item) => {
+      if (selectedType !== 'All' && item.categoryType !== selectedType) return false;
+      if (selectedRegion !== 'All' && item.region !== selectedRegion && item.region !== 'Global Polar')
+        return false;
+
       if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesTitle = item.title.toLowerCase().includes(query);
-        const matchesAbstract = item.abstract.toLowerCase().includes(query);
-        const matchesAuthor = item.authors.some((a) => a.toLowerCase().includes(query));
-        const matchesInstitution = item.institution.toLowerCase().includes(query);
-        const matchesTopics = item.topics.some((t) => t.toLowerCase().includes(query));
-        if (!matchesTitle && !matchesAbstract && !matchesAuthor && !matchesInstitution && !matchesTopics) {
-          return false;
-        }
-      }
-
-      // Region filter
-      if (selectedRegion !== 'All' && item.region !== selectedRegion) {
-        return false;
-      }
-
-      // Content Type filter
-      if (selectedType !== 'All' && item.contentType !== selectedType) {
-        return false;
-      }
-
-      // Year filter
-      if (selectedYear !== 'All' && item.year.toString() !== selectedYear) {
-        return false;
-      }
-
-      // Category filter
-      if (selectedCategory !== 'All' && item.category !== selectedCategory) {
-        return false;
+        const q = searchQuery.toLowerCase();
+        const matchesTitle = item.title.toLowerCase().includes(q);
+        const matchesAbstract = item.abstract.toLowerCase().includes(q);
+        const matchesInst = item.institution.toLowerCase().includes(q);
+        if (!matchesTitle && !matchesAbstract && !matchesInst) return false;
       }
 
       return true;
     });
-  }, [researchItems, searchQuery, selectedRegion, selectedType, selectedYear, selectedCategory]);
+  }, [unifiedItems, selectedType, selectedRegion, searchQuery]);
 
-  const copyCitation = (item: ResearchItem) => {
-    const citation = `${item.authors.join(', ')} (${item.year}). ${item.title}. ${item.institution}. DOI: ${item.doi}`;
-    navigator.clipboard.writeText(citation);
-    setCopiedDoi(true);
-    setTimeout(() => setCopiedDoi(false), 2000);
-  };
-
-  const getContentTypeIcon = (type: ContentType) => {
-    switch (type) {
-      case 'Research Paper':
-        return <FileText className="w-3.5 h-3.5 text-cyan-400" />;
-      case 'Dataset':
-        return <Database className="w-3.5 h-3.5 text-emerald-400" />;
-      case 'Satellite Data':
-        return <Satellite className="w-3.5 h-3.5 text-blue-400" />;
-      case 'Scientific Report':
-        return <BookMarked className="w-3.5 h-3.5 text-purple-400" />;
-      case 'Expedition Record':
-        return <Compass className="w-3.5 h-3.5 text-amber-400" />;
-      default:
-        return <FileText className="w-3.5 h-3.5 text-cyan-400" />;
-    }
+  const copyCitation = (item: any) => {
+    const text = `${item.title} (${item.year}). ${item.institution}. Archived in POLARIS Central Knowledge Repository.`;
+    navigator.clipboard.writeText(text);
+    setCopiedCitation(true);
+    setTimeout(() => setCopiedCitation(false), 2000);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Header */}
-      <div className="space-y-2 border-b border-slate-800 pb-6">
-        <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono tracking-widest uppercase">
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>Peer-Reviewed & Open Data Intelligence</span>
+      <div className="space-y-2 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase mb-1">
+            <Layers className="w-3.5 h-3.5 text-sky-400" />
+            <span>Central Archive · Ministry of Earth Sciences (MoES)</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Central Polar Knowledge Repository
+          </h1>
+          <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
+            Archival source of truth for expedition field logs, publications, cryogenic sensor datasets, photographic archives, and institutional activity records.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Explore Polar Knowledge
-        </h1>
-        <p className="text-sm text-slate-400 max-w-2xl">
-          Search open glaciological papers, multi-decadal cryospheric datasets, satellite telemetry indices, and expedition logs.
-        </p>
+
+        <button
+          onClick={() => onNavigate('studio')}
+          className="self-start md:self-auto ds-btn-primary"
+        >
+          <Sparkles className="w-4 h-4 text-slate-950" />
+          <span>Open Content Studio</span>
+        </button>
       </div>
 
-      {/* Search Bar & Primary Facets */}
-      <div className="space-y-4 bg-slate-900/60 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search research, datasets, expeditions, glaciers, Thwaites, albedo..."
-            className="w-full pl-11 pr-4 py-3 bg-slate-950/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
-          />
-          {searchQuery && (
+      {/* Search Bar & Facets */}
+      <div className="bg-[#0b101d] border border-slate-800 rounded-lg p-4 space-y-3.5">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search reports, DOIs, datasets, photographs, Bharati station, Thwaites..."
+              className="w-full pl-10 pr-16 py-2.5 bg-slate-900 border border-slate-800 rounded text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs px-1.5 py-0.5 cursor-pointer font-mono"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-slate-900 border border-slate-800 rounded p-0.5 self-start sm:self-auto">
             <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs px-2 py-1"
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded text-xs flex items-center gap-1.5 cursor-pointer transition-colors ${
+                viewMode === 'grid'
+                  ? 'bg-slate-800 text-white font-medium'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Grid View"
             >
-              Clear
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Grid</span>
             </button>
-          )}
-        </div>
-
-        {/* Filter Dropdowns and Buttons */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-          {/* Region */}
-          <div>
-            <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1">Region</label>
-            <select
-              value={selectedRegion}
-              onChange={(e) => setSelectedRegion(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-cyan-400 cursor-pointer"
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded text-xs flex items-center gap-1.5 cursor-pointer transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-slate-800 text-white font-medium'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Table View (High Density)"
             >
-              {regions.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Content Type */}
-          <div>
-            <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1">Content Type</label>
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-cyan-400 cursor-pointer"
-            >
-              {contentTypes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1">Category</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-cyan-400 cursor-pointer"
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Publication Year */}
-          <div>
-            <label className="block text-[11px] font-mono uppercase text-slate-400 mb-1">Year</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:border-cyan-400 cursor-pointer"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+              <List className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
           </div>
         </div>
 
-        {/* Results Counter and Active Filter Tags */}
-        <div className="flex items-center justify-between pt-2 text-xs text-slate-400 font-mono">
+        {/* Content Type Filter Tabs */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-1">
+          {types.map((t) => (
+            <button
+              key={t}
+              onClick={() => setSelectedType(t)}
+              className={`px-3 py-1 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                selectedType === t
+                  ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
+                  : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 border border-slate-800/80'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between text-xs text-slate-400 font-mono pt-1">
           <div>
-            Showing <span className="text-cyan-400 font-bold">{filteredItems.length}</span> verified records
+            Showing <span className="text-white font-semibold">{filteredItems.length}</span> verified scientific records
           </div>
-          {(selectedRegion !== 'All' || selectedType !== 'All' || selectedYear !== 'All' || selectedCategory !== 'All' || searchQuery) && (
+          {(selectedType !== 'All' || selectedRegion !== 'All' || searchQuery) && (
             <button
               onClick={() => {
-                setSelectedRegion('All');
                 setSelectedType('All');
-                setSelectedYear('All');
-                setSelectedCategory('All');
+                setSelectedRegion('All');
                 setSearchQuery('');
               }}
-              className="text-xs text-cyan-400 hover:underline cursor-pointer"
+              className="text-sky-400 hover:underline cursor-pointer"
             >
-              Reset all filters
+              Reset filters
             </button>
           )}
         </div>
       </div>
 
-      {/* Results Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredItems.map((item) => (
-          <div
-            key={item.id}
-            onClick={() => setActiveItem(item)}
-            className="group bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/40 rounded-xl p-5 transition-all cursor-pointer flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              {/* Unboxed metadata line with typographic separators per zero-pill rule */}
-              <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-                <span className="flex items-center gap-1 text-cyan-300 font-semibold">
-                  {getContentTypeIcon(item.contentType)}
-                  <span>{item.contentType}</span>
-                </span>
-                <span aria-hidden="true">·</span>
-                <span>{item.region}</span>
-                <span aria-hidden="true">·</span>
-                <span>{item.year}</span>
-              </div>
-
-              {/* Title */}
-              <h2 className="text-base font-bold text-white group-hover:text-cyan-200 transition-colors leading-snug">
-                {item.title}
-              </h2>
-
-              {/* Abstract Snippet */}
-              <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
-                {item.abstract}
-              </p>
-
-              {/* Key Takeaway Banner */}
-              <div className="p-2.5 bg-slate-950/70 border-l-2 border-cyan-400 rounded-r text-[11px] text-slate-300">
-                <span className="text-cyan-300 font-semibold mr-1">Finding:</span>
-                {item.keyTakeaway}
-              </div>
-            </div>
-
-            {/* Bottom Card Footer */}
-            <div className="pt-4 mt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-              <div className="truncate max-w-[200px] text-slate-400 text-[11px]">
-                {item.institution}
-              </div>
-              <div className="flex items-center gap-1.5 text-cyan-400 font-medium group-hover:translate-x-0.5 transition-transform">
-                <span>View Full Record</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
+      {/* TABLE VIEW (Scientific Catalog Density) */}
+      {viewMode === 'table' ? (
+        <div className="bg-[#0b101d] border border-slate-800 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-900 border-b border-slate-800 text-slate-400 font-mono uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">Type</th>
+                  <th className="py-3 px-4">Title & Description</th>
+                  <th className="py-3 px-4">Institution / Region</th>
+                  <th className="py-3 px-4">Linked Relations</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-slate-900/50 transition-colors">
+                    <td className="py-3 px-4 align-top">
+                      <span className="ds-badge ds-badge-neutral text-[10px]">
+                        {item.categoryType}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 align-top max-w-md">
+                      <div
+                        onClick={() => {
+                          setActiveItem(item);
+                          setActiveItemType(item.categoryType);
+                        }}
+                        className="font-semibold text-white hover:text-sky-300 cursor-pointer line-clamp-1 leading-snug"
+                      >
+                        {item.title}
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">
+                        {item.secondaryText}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 align-top font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                      <div>{item.institution}</div>
+                      <div className="text-slate-500">{item.region} · {item.year}</div>
+                    </td>
+                    <td className="py-3 px-4 align-top">
+                      <div className="flex flex-wrap gap-1 text-[10px] font-mono">
+                        {item.connectedExpeditionId && (
+                          <span className="ds-badge ds-badge-accent py-0 text-[10px]">
+                            Expedition
+                          </span>
+                        )}
+                        {item.connectedDatasetIds && item.connectedDatasetIds.length > 0 && (
+                          <span className="ds-badge ds-badge-success py-0 text-[10px]">
+                            {item.connectedDatasetIds.length} Datasets
+                          </span>
+                        )}
+                        {item.connectedMediaIds && item.connectedMediaIds.length > 0 && (
+                          <span className="ds-badge ds-badge-neutral py-0 text-[10px]">
+                            {item.connectedMediaIds.length} Media
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 align-top text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => {
+                            setActiveItem(item);
+                            setActiveItemType(item.categoryType);
+                          }}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono cursor-pointer"
+                        >
+                          Inspect
+                        </button>
+                        <button
+                          onClick={() =>
+                            onNavigate('studio', {
+                              sourceId: item.id,
+                              sourceType:
+                                item.categoryType === 'Expedition Reports'
+                                  ? 'Expedition Report'
+                                  : item.categoryType === 'Publications'
+                                  ? 'Publication'
+                                  : item.categoryType === 'Datasets'
+                                  ? 'Dataset'
+                                  : 'Activity',
+                            })
+                          }
+                          className="px-2.5 py-1 rounded bg-sky-400 hover:bg-sky-300 text-slate-950 text-[11px] font-semibold cursor-pointer"
+                        >
+                          Studio
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        /* GRID VIEW */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredItems.map((item) => (
+            <div
+              key={item.id}
+              className="group bg-[#0b101d] hover:bg-[#0e1526] border border-slate-800 hover:border-slate-700 rounded-lg p-5 transition-all space-y-3 flex flex-col justify-between"
+            >
+              <div className="space-y-2.5">
+                {/* Top metadata line with typographic separators */}
+                <div className="flex items-center justify-between gap-2 text-xs font-mono">
+                  <span className="ds-badge ds-badge-neutral">
+                    {item.categoryType}
+                  </span>
+                  <span className="text-slate-400 text-[11px] truncate max-w-[200px]">{item.institution}</span>
+                </div>
 
-      {filteredItems.length === 0 && (
-        <div className="text-center py-16 bg-slate-900/40 border border-slate-800 rounded-2xl p-8 space-y-3">
-          <div className="text-slate-400 text-sm">No research records found matching your filters.</div>
-          <button
-            onClick={() => {
-              setSelectedRegion('All');
-              setSelectedType('All');
-              setSelectedYear('All');
-              setSelectedCategory('All');
-              setSearchQuery('');
-            }}
-            className="px-4 py-2 text-xs font-semibold text-cyan-300 bg-cyan-950/60 border border-cyan-500/40 rounded-lg hover:bg-cyan-900/60 cursor-pointer"
-          >
-            Clear All Filters
-          </button>
+                {/* Title */}
+                <h3
+                  onClick={() => {
+                    setActiveItem(item);
+                    setActiveItemType(item.categoryType);
+                  }}
+                  className="text-base font-bold text-white group-hover:text-sky-200 transition-colors leading-snug cursor-pointer"
+                >
+                  {item.title}
+                </h3>
+
+                <div className="text-[11px] text-slate-400 font-mono">
+                  {item.secondaryText}
+                </div>
+
+                {/* Summary */}
+                <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                  {item.abstract}
+                </p>
+
+                {/* Visible Relational Connections */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] font-mono text-slate-400">
+                  {item.connectedExpeditionId && (
+                    <span className="ds-badge ds-badge-accent py-0 text-[10px]">
+                      Linked Expedition
+                    </span>
+                  )}
+                  {item.connectedDatasetIds && item.connectedDatasetIds.length > 0 && (
+                    <span className="ds-badge ds-badge-success py-0 text-[10px]">
+                      Datasets ({item.connectedDatasetIds.length})
+                    </span>
+                  )}
+                  {item.connectedMediaIds && item.connectedMediaIds.length > 0 && (
+                    <span className="ds-badge ds-badge-neutral py-0 text-[10px]">
+                      Media ({item.connectedMediaIds.length})
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Card Actions: Launch Content Studio! */}
+              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs">
+                <button
+                  onClick={() =>
+                    onNavigate('studio', {
+                      sourceId: item.id,
+                      sourceType:
+                        item.categoryType === 'Expedition Reports'
+                          ? 'Expedition Report'
+                          : item.categoryType === 'Publications'
+                          ? 'Publication'
+                          : item.categoryType === 'Datasets'
+                          ? 'Dataset'
+                          : 'Activity',
+                    })
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-sky-400 hover:bg-sky-300 text-slate-950 text-xs font-semibold cursor-pointer shadow-sm transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                  <span>Create Outreach Content</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveItem(item);
+                    setActiveItemType(item.categoryType);
+                  }}
+                  className="text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer font-mono text-[11px]"
+                >
+                  <span>Inspect Record</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-sky-400" />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Detailed Record Modal */}
+      {/* Record Inspection Modal */}
       {activeItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#090f1d] border border-slate-700 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl relative">
+          <div className="bg-[#0b101d] border border-slate-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl relative">
             <button
               onClick={() => setActiveItem(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Modal Header */}
             <div className="space-y-2 pr-8">
-              <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
-                <span>{activeItem.contentType}</span>
-                <span aria-hidden="true">·</span>
-                <span>{activeItem.region}</span>
-                <span aria-hidden="true">·</span>
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+                <span className="ds-badge ds-badge-neutral">{activeItem.categoryType}</span>
+                <span>{activeItem.institution}</span>
+                <span aria-hidden="true" className="text-slate-600">·</span>
                 <span>{activeItem.year}</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
+              <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">
                 {activeItem.title}
               </h2>
-              <div className="text-xs text-slate-400">
-                Authors: <span className="text-slate-200">{activeItem.authors.join(', ')}</span>
-              </div>
-              <div className="text-xs text-slate-400">
-                Institution: <span className="text-cyan-300">{activeItem.institution}</span>
-              </div>
+              <div className="text-xs text-slate-400 font-mono">{activeItem.secondaryText}</div>
             </div>
 
-            {/* DOI & Citations Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="text-slate-500">DOI:</span>
-                <span className="text-cyan-300">{activeItem.doi}</span>
+            {/* Description / Summary */}
+            <div className="space-y-1.5">
+              <h3 className="text-[11px] uppercase font-mono tracking-wider text-slate-400">
+                Scientific Overview & Empirical Findings
+              </h3>
+              <p className="text-sm text-slate-300 leading-relaxed bg-slate-900/90 p-4 rounded border border-slate-800">
+                {activeItem.abstract}
+              </p>
+            </div>
+
+            {/* Citation Box */}
+            <div className="p-3 bg-slate-900 border border-slate-800 rounded flex items-center justify-between text-xs font-mono">
+              <div className="text-slate-400 truncate max-w-md">
+                Archived in POLARIS Central Knowledge Repository (MoES)
               </div>
               <button
                 onClick={() => copyCitation(activeItem)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded cursor-pointer transition-colors"
               >
-                {copiedDoi ? (
+                {copiedCitation ? (
                   <>
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Copied!</span>
+                    <span>Copied</span>
                   </>
                 ) : (
                   <>
@@ -381,63 +551,41 @@ export const KnowledgeRepositoryView: React.FC<KnowledgeRepositoryViewProps> = (
               </button>
             </div>
 
-            {/* Abstract */}
-            <div className="space-y-2">
-              <h3 className="text-xs uppercase font-mono tracking-wider text-slate-400">
-                Scientific Abstract
-              </h3>
-              <p className="text-sm text-slate-300 leading-relaxed bg-slate-950/50 p-4 rounded-xl border border-slate-800/80">
-                {activeItem.abstract}
-              </p>
-            </div>
-
-            {/* Key Takeaway */}
-            <div className="p-4 bg-cyan-950/20 border-l-3 border-cyan-400 rounded-r-xl space-y-1">
-              <div className="text-xs font-bold text-cyan-300 uppercase tracking-wide">
-                Key Empirical Takeaway
-              </div>
-              <div className="text-sm text-slate-200 leading-relaxed">
-                {activeItem.keyTakeaway}
-              </div>
-            </div>
-
-            {/* Topics */}
-            <div>
-              <div className="text-xs font-mono text-slate-400 mb-2">Research Keywords & Topics:</div>
-              <div className="flex flex-wrap gap-2 text-xs">
-                {activeItem.topics.map((t) => (
-                  <span key={t} className="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
-
             {/* Modal Actions */}
-            <div className="pt-4 border-t border-slate-800 flex flex-wrap gap-3">
+            <div className="pt-3 border-t border-slate-800 flex flex-wrap gap-3">
               <button
                 onClick={() => {
                   const id = activeItem.id;
+                  const type =
+                    activeItem.categoryType === 'Expedition Reports'
+                      ? 'Expedition Report'
+                      : activeItem.categoryType === 'Publications'
+                      ? 'Publication'
+                      : activeItem.categoryType === 'Datasets'
+                      ? 'Dataset'
+                      : 'Activity';
                   setActiveItem(null);
-                  onNavigate('story-studio', { researchId: id });
+                  onNavigate('studio', { sourceId: id, sourceType: type });
                 }}
-                className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-500 rounded-xl transition-colors cursor-pointer"
+                className="ds-btn-primary"
               >
-                <BookOpen className="w-4 h-4" />
-                <span>Turn This Research Into a Public Story</span>
+                <Sparkles className="w-4 h-4 text-slate-950" />
+                <span>Transform Into Outreach Package in Content Studio</span>
               </button>
 
-              <button
-                onClick={() => {
-                  const title = activeItem.title;
-                  setActiveItem(null);
-                  onNavigate('ai', { query: `Explain the scientific research: "${title}"` });
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-cyan-300" />
-                <span>Ask Polar AI About This Paper</span>
-              </button>
+              {activeItem.connectedExpeditionId && (
+                <button
+                  onClick={() => {
+                    const expId = activeItem.connectedExpeditionId;
+                    setActiveItem(null);
+                    onNavigate('expeditions', { expeditionId: expId });
+                  }}
+                  className="ds-btn-secondary"
+                >
+                  <Compass className="w-4 h-4 text-sky-400" />
+                  <span>View Connected Expedition</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

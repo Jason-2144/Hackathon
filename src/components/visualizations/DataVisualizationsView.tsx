@@ -512,10 +512,10 @@ export const DataVisualizationsView: React.FC<DataVisualizationsViewProps> = ({
             Want to explain these numbers to school classrooms or the public?
           </div>
           <button
-            onClick={() => onNavigate('story-studio')}
+            onClick={() => onNavigate('studio', { sourceId: 'data-antarctic-seaice-extent', sourceType: 'Dataset' })}
             className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-cyan-300 bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/40 rounded-xl transition-all cursor-pointer"
           >
-            <span>Convert This Chart Into a Story</span>
+            <span>Convert This Chart Into an Outreach Story</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

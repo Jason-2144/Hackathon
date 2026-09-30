@@ -1,4 +1,15 @@
-import { PolarLocation, ResearchItem, PolarDataset, Expedition, MediaItem, ScienceStory, AIResponse } from '../types/polar';
+import {
+  PolarLocation,
+  ResearchItem,
+  PolarDataset,
+  Expedition,
+  MediaItem,
+  ScienceStory,
+  AIResponse,
+  InstitutionalActivity,
+  ExpeditionReport,
+  GeneratedOutreachItem
+} from '../types/polar';
 
 export const POLAR_LOCATIONS: PolarLocation[] = [
   {
@@ -19,6 +30,7 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     relatedResearchIds: ['res-thwaites-grounding', 'res-antarctic-ice-sheet-mass'],
     relatedDatasetIds: ['data-grace-mass-balance', 'data-ice-velocity-sentinel'],
     relatedMediaIds: ['med-thwaites-icefin', 'med-glacier-radar'],
+    relatedExpeditionIds: ['exp-itgc-thwaites'],
     temperatureAnomalyC: 2.1,
     iceVelocityMetersPerYear: 3200,
     thumbnailUrl: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=800&q=80'
@@ -29,10 +41,10 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     region: 'Antarctica',
     category: 'Research Station',
     coordinates: { lat: -69.41, lng: 76.19, elevationMeters: 35 },
-    summary: "India's third permanent Antarctic research facility located on the Larsemann Hills. Constructed from 134 prefabricated shipping containers, running zero-emission environmental recycling systems.",
-    scientificSignificance: 'Focuses on oceanographic, geological, and atmospheric studies to decipher the breakup of the Gondwanaland supercontinent and satellite telemetry for Indian polar orbiters.',
+    summary: "India's state-of-the-art permanent Antarctic research facility on the Larsemann Hills, operated by NCPOR under the Ministry of Earth Sciences (MoES). Built with 134 modular ISO containers with zero-effluent discharge.",
+    scientificSignificance: 'Hub for atmospheric profiling, satellite telemetry reception in polar orbits, paleoclimate ice core analysis, and geological reconstruction of Gondwanaland rifting.',
     establishedYear: 2012,
-    operatingCountry: 'India (National Centre for Polar and Ocean Research - NCPOR)',
+    operatingCountry: 'India (Ministry of Earth Sciences - MoES / NCPOR)',
     keyFindings: [
       'Continuous ozone sonde and aerosol optical depth profiling in Queen Mary Land.',
       'Paleoclimate sediment cores revealing Indo-Antarctic rift dynamics from 120 Ma.',
@@ -42,6 +54,7 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     relatedResearchIds: ['res-gondwana-breakup', 'res-antarctic-aerosols'],
     relatedDatasetIds: ['data-bharati-met', 'data-grace-mass-balance'],
     relatedMediaIds: ['med-bharati-life', 'med-antarctic-twilight'],
+    relatedExpeditionIds: ['exp-indian-antarctic-44'],
     temperatureAnomalyC: 0.8,
     thumbnailUrl: 'https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80'
   },
@@ -56,13 +69,13 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     establishedYear: 1956,
     operatingCountry: 'United States (US Antarctic Program / NSF)',
     keyFindings: [
-      'Discovery of extremophilic cold-adapted sulfur-metabolizing microbes beneath Taylor Glacier (Blood Falls).',
+      'Discovery of extremophilic cold-adapted sulfur-metabolizing microbes beneath Taylor Glacier.',
       'Long-term sea ice biological succession logs in McMurdo Sound over 60 years.'
     ],
     currentStatus: 'Active Monitoring',
     relatedResearchIds: ['res-ross-sea-ecology', 'res-antarctic-ice-sheet-mass'],
-    relatedDatasetIds: ['data-antarctic-seaice-extent', 'data-mcmurdo-met'],
-    relatedMediaIds: ['med-polar-diver', 'med-aurora-australis'],
+    relatedDatasetIds: ['data-antarctic-seaice-extent'],
+    relatedMediaIds: ['med-polar-diver'],
     temperatureAnomalyC: 1.4,
     thumbnailUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80'
   },
@@ -72,8 +85,8 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     region: 'Arctic',
     category: 'Glacier',
     coordinates: { lat: 69.17, lng: -49.83, elevationMeters: 120 },
-    summary: 'One of the fastest discharging outlet tidewater glaciers on Earth, draining roughly 6.5% of the Greenland Ice Sheet into Ilulissat Icefjord, a UNESCO World Heritage site.',
-    scientificSignificance: 'A critical bellwether for polar ocean warming. Calving dynamics here produce roughly 35 billion tonnes of icebergs per year into Disko Bay and the North Atlantic.',
+    summary: 'One of the fastest discharging outlet tidewater glaciers on Earth, draining roughly 6.5% of the Greenland Ice Sheet into Ilulissat Icefjord.',
+    scientificSignificance: 'A critical bellwether for polar ocean warming. Calving dynamics here produce roughly 35 billion tonnes of icebergs per year into Disko Bay.',
     operatingCountry: 'Greenland / Denmark (GEUS Collaboration)',
     keyFindings: [
       'Flow velocities exceeding 40 meters per day observed during peak summer discharge.',
@@ -82,29 +95,29 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     currentStatus: 'Critical Observation',
     relatedResearchIds: ['res-greenland-ice-melt', 'res-arctic-amplification'],
     relatedDatasetIds: ['data-ice-velocity-sentinel', 'data-arctic-seaice-extent'],
-    relatedMediaIds: ['med-jakobshavn-calving', 'med-drone-mapping'],
+    relatedMediaIds: ['med-jakobshavn-calving'],
     temperatureAnomalyC: 2.8,
     iceVelocityMetersPerYear: 14500,
     thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'loc-ny-alesund',
-    name: 'Ny-Ålesund Research Base',
+    name: 'Ny-Ålesund Research Base (Himadri Arctic Station)',
     region: 'Arctic',
     category: 'Climate Observatory',
     coordinates: { lat: 78.92, lng: 11.93, elevationMeters: 12 },
-    summary: 'The northernmost year-round civilian research settlement in the world, located on the island of Spitsbergen in Svalbard, Norway. A radio-silent zone for supreme atmospheric monitoring.',
+    summary: 'The northernmost year-round civilian research settlement in the world, in Svalbard, Norway. Houses India\'s Himadri Arctic Station operated by MoES / NCPOR alongside 10 international institutes.',
     scientificSignificance: 'Key reference station for Arctic Amplification research, black carbon pollution transport from Eurasia, greenhouse gas monitoring, and fjord marine biology.',
     establishedYear: 1968,
-    operatingCountry: 'International (Kings Bay AS / 11 National Polar Institutes including India, Germany, UK, France, Japan)',
+    operatingCountry: 'International / India Himadri Station (MoES / NCPOR)',
     keyFindings: [
       'Arctic warming rate recorded at 4x the global average rate since 1979.',
-      'Intrusion of warmer Atlantic Water (Atlantification) replacing cold Arctic fjord water regimes.'
+      'Intrusion of warmer Atlantic Water replacing cold Arctic fjord regimes.'
     ],
     currentStatus: 'Active Monitoring',
-    relatedResearchIds: ['res-arctic-amplification', 'res-black-carbon-transport'],
-    relatedDatasetIds: ['data-svalbard-ghg', 'data-arctic-seaice-extent'],
-    relatedMediaIds: ['med-svalbard-balloon', 'med-glacier-front'],
+    relatedResearchIds: ['res-arctic-amplification'],
+    relatedDatasetIds: ['data-arctic-seaice-extent'],
+    relatedMediaIds: ['med-svalbard-balloon'],
     temperatureAnomalyC: 3.2,
     thumbnailUrl: 'https://images.unsplash.com/photo-1483921020237-2ff51e8e4b22?auto=format&fit=crop&w=800&q=80'
   },
@@ -114,8 +127,8 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     region: 'Antarctica',
     category: 'Wildlife Habitat',
     coordinates: { lat: -74.2, lng: -44.5, elevationMeters: 0 },
-    summary: 'A pristine breeding territory on fast sea ice for Aptenodytes forsteri (Emperor Penguins), monitored by satellite guano staining and robotic marine floats.',
-    scientificSignificance: 'Emperor penguins depend strictly on stable land-fast sea ice for breeding from April to December. Early breakout events correlate with ocean heat anomalies.',
+    summary: 'A breeding territory on fast sea ice for Emperor Penguins, monitored by satellite guano staining and robotic marine floats.',
+    scientificSignificance: 'Emperor penguins depend strictly on stable land-fast sea ice for breeding from April to December.',
     operatingCountry: 'Antarctic Treaty International Protected Area',
     keyFindings: [
       'Breeding failures documented when regional fast ice experienced premature melt in 2022-2023.',
@@ -124,7 +137,7 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     currentStatus: 'Critical Observation',
     relatedResearchIds: ['res-emperor-breeding-failure', 'res-antarctic-sea-ice-minimum'],
     relatedDatasetIds: ['data-antarctic-seaice-extent'],
-    relatedMediaIds: ['med-emperor-family', 'med-icebreaker-path'],
+    relatedMediaIds: ['med-emperor-family'],
     temperatureAnomalyC: 1.7,
     thumbnailUrl: 'https://images.unsplash.com/photo-1598439210625-5067c578f3f6?auto=format&fit=crop&w=800&q=80'
   },
@@ -134,20 +147,113 @@ export const POLAR_LOCATIONS: PolarLocation[] = [
     region: 'Arctic',
     category: 'Expedition Site',
     coordinates: { lat: 85.05, lng: 135.2, elevationMeters: 0 },
-    summary: 'The historic drift corridor of the German research icebreaker RV Polarstern, frozen into the Arctic sea ice for 389 days to study the complete annual Arctic climate cycle.',
-    scientificSignificance: 'The largest polar research expedition in history (MOSAiC), yielding unprecedented cross-disciplinary data on coupled atmosphere-ice-ocean-ecosystem feedback loops.',
+    summary: 'The historic drift corridor of the German research icebreaker RV Polarstern, frozen into Arctic sea ice for 389 days.',
+    scientificSignificance: 'Unprecedented cross-disciplinary data on coupled atmosphere-ice-ocean-ecosystem feedback loops.',
     establishedYear: 2019,
     operatingCountry: 'Alfred Wegener Institute (20 Nations Consortium)',
     keyFindings: [
-      'Sea ice is thinner and more mobile than historical models predicted, moving 50% faster along the Transpolar Drift Stream.',
-      'Warm summer clouds trap significant longwave radiation accelerating top-down surface melt ponds.'
+      'Sea ice is thinner and moving 50% faster along the Transpolar Drift Stream.',
+      'Warm summer clouds trap significant longwave radiation accelerating top-down melt.'
     ],
     currentStatus: 'Historical Site',
     relatedResearchIds: ['res-mosaic-atmosphere', 'res-arctic-amplification'],
-    relatedDatasetIds: ['data-mosaic-drift-ice', 'data-arctic-seaice-extent'],
-    relatedMediaIds: ['med-polarstern-night', 'med-ice-camp-lab'],
+    relatedDatasetIds: ['data-arctic-seaice-extent'],
+    relatedMediaIds: ['med-polarstern-night'],
+    relatedExpeditionIds: ['exp-mosaic-arctic'],
     temperatureAnomalyC: 2.6,
     thumbnailUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80'
+  }
+];
+
+export const EXPEDITION_REPORTS: ExpeditionReport[] = [
+  {
+    id: 'rep-isea-44-cruise',
+    expeditionId: 'exp-indian-antarctic-44',
+    reportNumber: 'MoES-ISEA-44-CR-01',
+    title: 'Integrated Scientific Cruise & Ice Sheet Profiling Report: 44th Indian Antarctic Expedition',
+    leadAuthor: 'Dr. Rahul Mohan',
+    institution: 'National Centre for Polar and Ocean Research (NCPOR), Ministry of Earth Sciences (MoES)',
+    date: '2025-04-12',
+    summary: 'Comprehensive mission report documenting station resupply at Maitri and Bharati, deep ice core drilling in Queen Maud Land, and oceanographic CTD transects across the Southern Ocean.',
+    methodology: 'Shallow and deep ice-coring electro-mechanical drill systems, underway acoustic Doppler current profiling, and radiosonde meteorological balloons.',
+    keyFindings: [
+      'Recovered 120m ice core preserving 850 years of atmospheric deposition chemistry.',
+      'Deployed 6 autonomous profiling Argo floats in the Antarctic Circumpolar Current.',
+      'Completed zero-carbon microgrid expansion at Bharati Station.'
+    ],
+    sections: [
+      {
+        title: '1. Executive Mission Summary',
+        content: 'The 44th Indian Scientific Expedition to Antarctica successfully fulfilled all MoES mandates, achieving continuous logistics, scientific station maintenance at Maitri and Bharati, and high-latitude Southern Ocean observation.'
+      },
+      {
+        title: '2. Cryospheric & Ice Core Recoveries',
+        content: 'High-elevation drilling at 72°S on the inland ice sheet yielded continuous ice cores down to bedrock-proximal strata, recording trace element transport from the Indian Ocean sector.'
+      },
+      {
+        title: '3. Station Renewable Microgrid Upgrades',
+        content: 'Installation of vertical-axis wind turbine arrays at Bharati Station reduced diesel generator consumption by 24% during summer and shoulder seasons.'
+      }
+    ],
+    relatedDatasetIds: ['data-bharati-met', 'data-grace-mass-balance'],
+    relatedMediaIds: ['med-bharati-life', 'med-antarctic-twilight'],
+    downloadUrl: '#report-pdf-download'
+  },
+  {
+    id: 'rep-itgc-icefin-report',
+    expeditionId: 'exp-itgc-thwaites',
+    reportNumber: 'ITGC-MELT-2024-R4',
+    title: 'Sub-Ice Shelf Cavity Exploration and Grounding Zone Oceanography at Thwaites Glacier',
+    leadAuthor: 'Dr. Britney E. Schmidt',
+    institution: 'International Thwaites Glacier Collaboration (ITGC / NSF / NERC)',
+    date: '2024-03-01',
+    summary: 'Technical and scientific cruise report on deploying the Icefin autonomous underwater vehicle through 600 meters of ice shelf into the grounding zone cavity of Thwaites Glacier.',
+    methodology: 'Hot water drill hole access, miniature AUV imaging, salinity and thermal sensors, multi-beam sonar bathymetry.',
+    keyFindings: [
+      'Direct measurement of ocean temperature at +1.5°C above in-situ freezing point.',
+      'Discovery of rapid basal staircase melting along vertical rifts.'
+    ],
+    sections: [
+      {
+        title: '1. Field Deployment Logistics',
+        content: 'Hot water drilling pierced 587 meters of glacial ice shelf to create a 35cm diameter borehole through which the slender Icefin robot was successfully lowered into the Amundsen Sea cavity.'
+      },
+      {
+        title: '2. Grounding Zone Ocean Dynamic Observations',
+        content: 'Underwater camera footage and thermal probes confirmed warm Circumpolar Deep Water intrudes into deep bedrock gutters directly beneath the glacier grounding line.'
+      }
+    ],
+    relatedDatasetIds: ['data-ice-velocity-sentinel', 'data-grace-mass-balance'],
+    relatedMediaIds: ['med-thwaites-icefin', 'med-glacier-radar'],
+    downloadUrl: '#report-pdf-download'
+  },
+  {
+    id: 'rep-mosaic-annual-summary',
+    expeditionId: 'exp-mosaic-arctic',
+    reportNumber: 'AWI-MOSAiC-FINAL-2023',
+    title: 'MOSAiC Final Expedition Synthesis: One Year Trapped in Central Arctic Sea Ice',
+    leadAuthor: 'Prof. Dr. Markus Rex',
+    institution: 'Alfred Wegener Institute (AWI) / MOSAiC Consortium',
+    date: '2023-10-15',
+    summary: 'The capstone institutional expedition report of the largest Arctic research initiative in history, compiling 389 days of coupled ocean-ice-atmosphere measurements.',
+    methodology: 'Drifting ice camp with ocean mast, radiation towers, autonomous drone surveys, and airborne research campaigns.',
+    keyFindings: [
+      'Documented complete seasonal cycle of sea ice growth and decay in central Arctic.',
+      'Identified critical winter cloud heating mechanisms.'
+    ],
+    sections: [
+      {
+        title: '1. Drift Track Summary',
+        content: 'RV Polarstern traversed 3,400 km along the Transpolar Drift stream, ending with breakout into Fram Strait.'
+      },
+      {
+        title: '2. Climate Model Calibration',
+        content: 'New parametrization models developed for winter liquid cloud persistence and ice lead heat fluxes.'
+      }
+    ],
+    relatedDatasetIds: ['data-arctic-seaice-extent'],
+    relatedMediaIds: ['med-polarstern-night'],
+    downloadUrl: '#report-pdf-download'
   }
 ];
 
@@ -168,6 +274,8 @@ export const RESEARCH_ITEMS: ResearchItem[] = [
     topics: ['Ice-Ocean Interaction', 'Subglacial Cavities', 'Grounding Zone', 'Sea Level Rise'],
     keyTakeaway: 'Basal melting is suppressed beneath flat ice sections by a thin freshwater layer, but accelerated along steep crevasses and vertical faces, threatening structural unpinning.',
     datasetIds: ['data-ice-velocity-sentinel', 'data-grace-mass-balance'],
+    relatedExpeditionId: 'exp-itgc-thwaites',
+    relatedMediaIds: ['med-thwaites-icefin', 'med-glacier-radar'],
     readingTimeMin: 9
   },
   {
@@ -186,6 +294,7 @@ export const RESEARCH_ITEMS: ResearchItem[] = [
     topics: ['Southern Ocean', 'Sea Ice Anomaly', 'Atmospheric Rivers', 'Polynyas'],
     keyTakeaway: 'The Southern Ocean has entered an altered regime characterized by reduced winter sea ice recovery, potentially signaling a regime shift in polar energy balance.',
     datasetIds: ['data-antarctic-seaice-extent'],
+    relatedExpeditionId: 'exp-indian-antarctic-44',
     readingTimeMin: 7
   },
   {
@@ -203,7 +312,8 @@ export const RESEARCH_ITEMS: ResearchItem[] = [
     citationCount: 412,
     topics: ['Arctic Amplification', 'Albedo Feedback', 'Polar Vortex', 'Energy Transport'],
     keyTakeaway: 'Previous climate simulations systematically underestimated Arctic warming rates; the positive albedo feedback loop has entered an accelerated trajectory.',
-    datasetIds: ['data-arctic-seaice-extent', 'data-svalbard-ghg'],
+    datasetIds: ['data-arctic-seaice-extent'],
+    relatedExpeditionId: 'exp-mosaic-arctic',
     readingTimeMin: 6
   },
   {
@@ -222,6 +332,7 @@ export const RESEARCH_ITEMS: ResearchItem[] = [
     topics: ['Species Conservation', 'Fast Ice Dependents', 'Emperor Penguins', 'Biodiversity'],
     keyTakeaway: 'Without rapid emissions reductions, over 90% of Emperor penguin colonies are projected to be quasi-extinct by the end of the 21st century.',
     datasetIds: ['data-antarctic-seaice-extent'],
+    relatedMediaIds: ['med-emperor-family'],
     readingTimeMin: 5
   },
   {
@@ -240,6 +351,8 @@ export const RESEARCH_ITEMS: ResearchItem[] = [
     topics: ['Gondwana', 'Continental Drift', 'Zircon Dating', 'East Antarctica'],
     keyTakeaway: 'Crustal suture zones in East Antarctica align directly with the Eastern Ghats belt in India, providing definitive physical proof of ancient continental continuity.',
     datasetIds: ['data-bharati-met'],
+    relatedExpeditionId: 'exp-indian-antarctic-44',
+    relatedMediaIds: ['med-bharati-life'],
     readingTimeMin: 8
   },
   {
@@ -257,12 +370,36 @@ export const RESEARCH_ITEMS: ResearchItem[] = [
     citationCount: 88,
     topics: ['MOSAiC', 'Arctic Clouds', 'Boundary Layer', 'Sea Ice Freeze'],
     keyTakeaway: 'Liquid water droplets persist in Arctic clouds even at temperatures down to -30°C, acting as an insulating blanket that impedes winter sea ice thickness growth.',
-    datasetIds: ['data-mosaic-drift-ice'],
+    datasetIds: ['data-arctic-seaice-extent'],
+    relatedExpeditionId: 'exp-mosaic-arctic',
+    relatedMediaIds: ['med-polarstern-night'],
     readingTimeMin: 10
   }
 ];
 
 export const POLAR_DATASETS: PolarDataset[] = [
+  {
+    id: 'data-bharati-met',
+    title: 'Larsemann Hills Atmospheric & Ozone Profiling Time-Series',
+    description: 'High-frequency meteorological soundings, ultraviolet radiation indices, and aerosol optical depth records continuously logged at Bharati Station.',
+    provider: 'National Centre for Polar and Ocean Research (NCPOR), Ministry of Earth Sciences (MoES)',
+    region: 'Antarctica',
+    temporalCoverage: '2012 - 2026 (Daily)',
+    updateFrequency: 'Hourly automated feed',
+    parameters: ['Surface Temperature (°C)', 'Ozone Column Density (DU)', 'Wind Speed & Gusts (knots)', 'Direct Solar Irradiance'],
+    fileFormat: 'CSV / NetCDF-4',
+    fileSizeMb: 320,
+    downloadUrl: '#dataset-download',
+    relatedExpeditionId: 'exp-indian-antarctic-44',
+    relatedPublicationIds: ['res-gondwana-breakup'],
+    sampleDataPoints: [
+      { label: 'Jan 2024 Mean Temp', value: -1.4, unit: '°C', anomaly: 0.6 },
+      { label: 'Jul 2024 Winter Low', value: -28.6, unit: '°C', anomaly: 1.2 },
+      { label: 'Oct 2024 Ozone Minimum', value: 135, unit: 'DU', anomaly: -18 },
+      { label: 'Jan 2025 Mean Temp', value: -0.9, unit: '°C', anomaly: 0.9 },
+      { label: 'Jan 2026 Mean Temp', value: -1.1, unit: '°C', anomaly: 0.7 }
+    ]
+  },
   {
     id: 'data-antarctic-seaice-extent',
     title: 'Antarctic Sea Ice Extent Daily Passive Microwave Index (1979 - 2026)',
@@ -275,6 +412,8 @@ export const POLAR_DATASETS: PolarDataset[] = [
     fileFormat: 'NetCDF-4 / CSV / GeoTIFF',
     fileSizeMb: 420,
     downloadUrl: '#dataset-download',
+    relatedExpeditionId: 'exp-indian-antarctic-44',
+    relatedPublicationIds: ['res-antarctic-sea-ice-minimum', 'res-emperor-breeding-failure'],
     sampleDataPoints: [
       { label: 'Feb 2020 (Summer Min)', value: 2.68, unit: 'M km²', anomaly: -0.42 },
       { label: 'Feb 2021 (Summer Min)', value: 2.54, unit: 'M km²', anomaly: -0.56 },
@@ -297,6 +436,8 @@ export const POLAR_DATASETS: PolarDataset[] = [
     fileFormat: 'GeoTIFF / NetCDF / GeoJSON',
     fileSizeMb: 680,
     downloadUrl: '#dataset-download',
+    relatedExpeditionId: 'exp-mosaic-arctic',
+    relatedPublicationIds: ['res-arctic-amplification', 'res-mosaic-atmosphere'],
     sampleDataPoints: [
       { label: '1980 Mean', value: 7.67, unit: 'M km²', anomaly: 1.25 },
       { label: '1990 Mean', value: 6.46, unit: 'M km²', anomaly: 0.04 },
@@ -319,6 +460,8 @@ export const POLAR_DATASETS: PolarDataset[] = [
     fileFormat: 'NetCDF-4 / ASCII Grid',
     fileSizeMb: 850,
     downloadUrl: '#dataset-download',
+    relatedExpeditionId: 'exp-itgc-thwaites',
+    relatedPublicationIds: ['res-thwaites-grounding'],
     sampleDataPoints: [
       { label: 'Antarctica Loss Rate', value: -148, unit: 'Gt/year', anomaly: -32 },
       { label: 'Greenland Loss Rate', value: -274, unit: 'Gt/year', anomaly: -48 },
@@ -337,6 +480,8 @@ export const POLAR_DATASETS: PolarDataset[] = [
     fileFormat: 'Cloud Optimized GeoTIFF (COG)',
     fileSizeMb: 1420,
     downloadUrl: '#dataset-download',
+    relatedExpeditionId: 'exp-itgc-thwaites',
+    relatedPublicationIds: ['res-thwaites-grounding'],
     sampleDataPoints: [
       { label: 'Thwaites Fast Stream', value: 3200, unit: 'm/year', anomaly: 450 },
       { label: 'Pine Island Gl. Trunk', value: 3950, unit: 'm/year', anomaly: 310 },
@@ -347,10 +492,46 @@ export const POLAR_DATASETS: PolarDataset[] = [
 
 export const EXPEDITIONS: Expedition[] = [
   {
+    id: 'exp-indian-antarctic-44',
+    name: '44th Indian Scientific Expedition to Antarctica (ISEA 44)',
+    vesselOrTeam: 'Chartered Ice-Class Vessel MV Vasiliy Golovnin',
+    leadScientist: 'Dr. Rahul Mohan',
+    institution: 'Ministry of Earth Sciences (MoES) / NCPOR, India',
+    startDate: '2024-12-15',
+    endDate: '2025-04-10',
+    status: 'Completed',
+    objective: 'Resupply Maitri and Bharati research stations, extract deep ice cores from Queen Maud Land, and deploy oceanographic conductivity-temperature-depth (CTD) mooring arrays across the Southern Ocean.',
+    region: 'Antarctica',
+    routeCoordinates: [
+      { lat: -33.92, lng: 18.42, label: 'Cape Town Staging Port' },
+      { lat: -69.41, lng: 76.19, label: 'Bharati Station (Larsemann Hills)' },
+      { lat: -70.76, lng: 11.73, label: 'Maitri Station (Schirmacher Oasis)' }
+    ],
+    milestones: [
+      'Successfully extracted 120-meter high-altitude ice core from Queen Maud Land plateau.',
+      'Commissioned new renewable microgrid combining vertical-axis wind turbines at Bharati Station.',
+      'Conducted Southern Ocean marine biological sampling of Antarctic krill (Euphausia superba).'
+    ],
+    findingsSummary: 'Established baseline trace metal deposition logs in Antarctic precipitation and validated regional climate models with direct sounding balloons.',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80',
+    reportIds: ['rep-isea-44-cruise'],
+    publicationIds: ['res-gondwana-breakup', 'res-antarctic-sea-ice-minimum'],
+    datasetIds: ['data-bharati-met', 'data-antarctic-seaice-extent'],
+    mediaIds: ['med-bharati-life', 'med-antarctic-twilight'],
+    activityIds: ['act-moes-flagoff-44', 'act-polar-conf-2025', 'act-antarctica-day'],
+    researchers: [
+      { name: 'Dr. Rahul Mohan', role: 'Expedition Leader & Chief Scientist', institution: 'NCPOR / MoES', specialization: 'Micropaleontology & Southern Ocean Oceanography' },
+      { name: 'Dr. Shridhar Jawak', role: 'Lead Cryospheric Geophysicist', institution: 'NCPOR / MoES', specialization: 'Satellite Remote Sensing & GIS' },
+      { name: 'Dr. Thamban Meloth', role: 'Senior Ice Core Specialist', institution: 'NCPOR / MoES', specialization: 'Paleoclimatology & Glaciochemistry' },
+      { name: 'Capt. Arun Sharma', role: 'Station Operations Commander', institution: 'Indian Army Corps of Engineers', specialization: 'High-Altitude Polar Logistics' }
+    ]
+  },
+  {
     id: 'exp-itgc-thwaites',
     name: 'International Thwaites Glacier Collaboration (ITGC)',
     vesselOrTeam: 'RV Nathaniel B. Palmer / Twin Otter Field Logistics',
     leadScientist: 'Dr. Ted Scambos & Dr. David Vaughan',
+    institution: 'US NSF & UK NERC Collaboration (International)',
     startDate: '2018-11-01',
     endDate: '2026-03-31',
     status: 'Ongoing',
@@ -367,13 +548,24 @@ export const EXPEDITIONS: Expedition[] = [
       'Installed GPS ground arrays logging grounding line tidal migration.'
     ],
     findingsSummary: 'Revealed warm Circumpolar Deep Water (CDW) pooling in submarine troughs, causing rapid basal incision along glacier shear margins.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=800&q=80'
+    thumbnailUrl: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=800&q=80',
+    reportIds: ['rep-itgc-icefin-report'],
+    publicationIds: ['res-thwaites-grounding'],
+    datasetIds: ['data-ice-velocity-sentinel', 'data-grace-mass-balance'],
+    mediaIds: ['med-thwaites-icefin', 'med-glacier-radar'],
+    activityIds: ['act-itgc-science-meeting'],
+    researchers: [
+      { name: 'Dr. Britney E. Schmidt', role: 'Lead Submersible Investigator', institution: 'Cornell University / ITGC', specialization: 'Robotics & Cryosphere Interface' },
+      { name: 'Dr. Peter E. Davis', role: 'Physical Oceanographer', institution: 'British Antarctic Survey (BAS)', specialization: 'Sub-ice shelf circulation' },
+      { name: 'Dr. Ted Scambos', role: 'US Lead Coordinator', institution: 'University of Colorado Boulder', specialization: 'Glaciology & Remote Sensing' }
+    ]
   },
   {
     id: 'exp-mosaic-arctic',
     name: 'MOSAiC: Multidisciplinary drifting Observatory for the Study of Arctic Climate',
     vesselOrTeam: 'Research Vessel Polarstern (AWI)',
     leadScientist: 'Prof. Dr. Markus Rex',
+    institution: 'Alfred Wegener Institute (AWI, Germany)',
     startDate: '2019-09-20',
     endDate: '2020-10-12',
     status: 'Completed',
@@ -391,30 +583,97 @@ export const EXPEDITIONS: Expedition[] = [
       'Over 150 Terabytes of raw continuous climate system measurements gathered.'
     ],
     findingsSummary: 'First year-round comprehensive empirical budget of the Arctic climate system, confirming accelerated ice thinning and complex winter cloud warming.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80'
+    thumbnailUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80',
+    reportIds: ['rep-mosaic-annual-summary'],
+    publicationIds: ['res-arctic-amplification', 'res-mosaic-atmosphere'],
+    datasetIds: ['data-arctic-seaice-extent'],
+    mediaIds: ['med-polarstern-night'],
+    activityIds: ['act-mosaic-data-portal'],
+    researchers: [
+      { name: 'Prof. Dr. Markus Rex', role: 'Expedition Head', institution: 'Alfred Wegener Institute', specialization: 'Atmospheric Physics & Polar Climatology' },
+      { name: 'Dr. Matthew Shupe', role: 'Atmosphere Team Co-Lead', institution: 'CIRES / NOAA', specialization: 'Cloud Microphysics' }
+    ]
+  }
+];
+
+export const INSTITUTIONAL_ACTIVITIES: InstitutionalActivity[] = [
+  {
+    id: 'act-moes-flagoff-44',
+    title: 'MoES Flags Off the 44th Indian Scientific Expedition to Antarctica',
+    type: 'Expedition',
+    institution: 'Ministry of Earth Sciences (MoES), Government of India',
+    date: '2024-12-15',
+    location: 'Cape Town Port & National Centre for Polar and Ocean Research (Goa)',
+    summary: 'The Ministry of Earth Sciences formally launched the 44th Indian Scientific Expedition to Antarctica comprising 48 scientists, logistics specialists, and environmental observers.',
+    description: 'Special emphasis during this expedition is laid on deep ice-coring in Queen Maud Land to reconstruct Indian monsoon teleconnections with the Southern Ocean, and upgrading Bharati Station to high-efficiency green energy microgrids.',
+    leadCoordinator: 'Secretary, Ministry of Earth Sciences (MoES) & Director, NCPOR',
+    participantsCount: 48,
+    status: 'Completed',
+    relatedExpeditionId: 'exp-indian-antarctic-44',
+    relatedMediaIds: ['med-bharati-life'],
+    badgeText: 'MoES Milestone'
   },
   {
-    id: 'exp-indian-antarctic-44',
-    name: '44th Indian Scientific Expedition to Antarctica (ISEA)',
-    vesselOrTeam: 'Chartered Ice-Class Vessel MV Vasiliy Golovnin',
-    leadScientist: 'Dr. Rahul Mohan / NCPOR Ministry of Earth Sciences',
-    startDate: '2024-12-15',
-    endDate: '2025-04-10',
+    id: 'act-polar-conf-2025',
+    title: 'National Polar Science Conference & Climate Outreach Forum (NPSC)',
+    type: 'Conference',
+    institution: 'National Centre for Polar and Ocean Research (NCPOR) / MoES',
+    date: '2025-02-28',
+    location: 'NCPOR Campus, Vasco da Gama, Goa',
+    summary: 'Three-day symposium bringing together cryospheric glaciologists, atmospheric physicists, and marine ecologists to present latest findings from Antarctica, the Arctic, and the Himalayas.',
+    description: 'Over 200 research presentations were delivered on sub-ice lakes, sea-ice minimum anomalies, Antarctic microbiomes, and Himalayan glacier mass balances. Special sessions were dedicated to school science education and teacher outreach modules.',
+    leadCoordinator: 'Dr. Thamban Meloth, Director NCPOR',
+    participantsCount: 220,
     status: 'Completed',
-    objective: 'Resupply Maitri and Bharati research stations, extract deep ice cores from Schirmacher Oasis, and deploy oceanographic conductivity-temperature-depth (CTD) mooring arrays.',
-    region: 'Antarctica',
-    routeCoordinates: [
-      { lat: -33.92, lng: 18.42, label: 'Cape Town Staging Port' },
-      { lat: -69.41, lng: 76.19, label: 'Bharati Station (Larsemann Hills)' },
-      { lat: -70.76, lng: 11.73, label: 'Maitri Station (Schirmacher Oasis)' }
-    ],
-    milestones: [
-      'Successfully extracted 120-meter high-altitude ice core from Queen Maud Land plateau.',
-      'Commissioned new renewable microgrid combining vertical-axis wind turbines at Bharati Station.',
-      'Conducted Southern Ocean marine biological sampling of Antarctic krill (Euphausia superba).'
-    ],
-    findingsSummary: 'Established baseline trace metal deposition logs in Antarctic precipitation and validated regional climate models with direct sounding balloons.',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80'
+    relatedExpeditionId: 'exp-indian-antarctic-44',
+    relatedPublicationIds: ['res-gondwana-breakup', 'res-antarctic-sea-ice-minimum'],
+    badgeText: 'National Symposium'
+  },
+  {
+    id: 'act-antarctica-day',
+    title: 'Antarctica Day Public Outreach & Smart Education Broadcast',
+    type: 'Outreach Program',
+    institution: 'Ministry of Earth Sciences (MoES)',
+    date: '2024-12-01',
+    location: 'Nationwide Hybrid Broadcast & Vigyan Prasar Hubs',
+    summary: 'Commemorating the 1959 signing of the Antarctic Treaty with interactive live video uplinks connecting 15,000 students directly to wintering scientists at Bharati and Maitri stations.',
+    description: 'Students engaged in live Q&A sessions on polar blizzards, penguin conservation, and solar observations. The event unveiled the pilot version of the POLARIS science intelligence repository.',
+    leadCoordinator: 'MoES Science Outreach Division',
+    participantsCount: 15400,
+    status: 'Completed',
+    relatedMediaIds: ['med-bharati-life', 'med-antarctic-twilight'],
+    badgeText: 'Smart Education'
+  },
+  {
+    id: 'act-itgc-science-meeting',
+    title: 'International Thwaites Glacier Collaboration Annual Synthesis Meeting',
+    type: 'Research Event',
+    institution: 'ITGC Consortium (UK NERC / US NSF)',
+    date: '2024-09-18',
+    location: 'Cambridge, United Kingdom',
+    summary: 'Global scientists reviewed autonomous submarine data, ice-penetrating radar grids, and sea level projection simulations.',
+    description: 'The conference released updated estimates showing Thwaites grounding line retreat has accelerated past critical submarine bedrock thresholds.',
+    leadCoordinator: 'ITGC Science Steering Committee',
+    participantsCount: 85,
+    status: 'Completed',
+    relatedExpeditionId: 'exp-itgc-thwaites',
+    relatedPublicationIds: ['res-thwaites-grounding'],
+    badgeText: 'International Consortium'
+  },
+  {
+    id: 'act-himadri-winter-plan',
+    title: 'MoES Year-Round Arctic Research Expansion at Himadri Station',
+    type: 'Institutional Update',
+    institution: 'Ministry of Earth Sciences (MoES) / NCPOR',
+    date: '2025-06-10',
+    location: 'Ny-Ålesund, Svalbard (78°55′N)',
+    summary: 'Strategic initiation of continuous year-round winter observation campaigns at India\'s Himadri Arctic Station.',
+    description: 'Expanding observation capabilities to record polar night atmospheric chemistry, aerosol deposition from mid-latitudes, and seasonal fjord ice-melt triggers in the European Arctic.',
+    leadCoordinator: 'Group Director, Arctic Operations (NCPOR)',
+    participantsCount: 16,
+    status: 'Upcoming',
+    relatedPublicationIds: ['res-arctic-amplification'],
+    badgeText: 'Arctic Strategy'
   }
 ];
 
@@ -427,12 +686,17 @@ export const MEDIA_ITEMS: MediaItem[] = [
     type: 'video',
     region: 'Antarctica',
     creator: 'Dr. Britney Schmidt & ITGC Media',
+    institution: 'ITGC / Cornell University',
     date: '2024-02-14',
     duration: '14:22',
     thumbnailUrl: 'https://images.unsplash.com/photo-1517411032315-54ef2cb783bb?auto=format&fit=crop&w=800&q=80',
-    mediaUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // Safe embed placeholder with scientific UI player
+    mediaUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     tags: ['Submersible', 'Thwaites', 'Grounding Zone', 'Robotics'],
-    scientificContext: 'Captures the actual underside of the West Antarctic ice shelf where warm seawater drives accelerated staircase melting.'
+    scientificContext: 'Captures the actual underside of the West Antarctic ice shelf where warm seawater drives accelerated staircase melting.',
+    relatedExpeditionId: 'exp-itgc-thwaites',
+    relatedLocationId: 'loc-thwaites',
+    relatedResearchId: 'res-thwaites-grounding',
+    resolution: '4K Ultra HD'
   },
   {
     id: 'med-bharati-life',
@@ -441,13 +705,18 @@ export const MEDIA_ITEMS: MediaItem[] = [
     category: 'Scientist Stories',
     type: 'video',
     region: 'Antarctica',
-    creator: 'NCPOR / Earth Science Outreach',
+    creator: 'NCPOR / Ministry of Earth Sciences (MoES)',
+    institution: 'Ministry of Earth Sciences (MoES), India',
     date: '2024-06-21',
     duration: '18:40',
     thumbnailUrl: 'https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80',
     mediaUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    tags: ['Bharati', 'India', 'Station Life', 'Wintering'],
-    scientificContext: 'Highlights the human dimension of high-latitude scientific operations and psychological resilience.'
+    tags: ['Bharati', 'India', 'Station Life', 'Wintering', 'MoES'],
+    scientificContext: 'Highlights the human dimension of high-latitude scientific operations and psychological resilience under -40°C blizzards.',
+    relatedExpeditionId: 'exp-indian-antarctic-44',
+    relatedLocationId: 'loc-bharati',
+    relatedActivityId: 'act-moes-flagoff-44',
+    resolution: '1080p HD'
   },
   {
     id: 'med-polarstern-night',
@@ -457,11 +726,16 @@ export const MEDIA_ITEMS: MediaItem[] = [
     type: 'photo',
     region: 'Arctic',
     creator: 'Esther Horvath / AWI MOSAiC',
+    institution: 'Alfred Wegener Institute (AWI)',
     date: '2023-11-10',
     thumbnailUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80',
     mediaUrl: 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1600&q=90',
     tags: ['MOSAiC', 'Aurora Borealis', 'Polar Night', 'Icebreaker'],
-    scientificContext: 'Award-winning photojournalism illuminating the harsh realities of Arctic winter science.'
+    scientificContext: 'Award-winning photojournalism illuminating the harsh realities of Arctic winter science.',
+    relatedExpeditionId: 'exp-mosaic-arctic',
+    relatedLocationId: 'loc-mosaic-site',
+    relatedResearchId: 'res-mosaic-atmosphere',
+    resolution: 'High Resolution Raw'
   },
   {
     id: 'med-emperor-family',
@@ -471,11 +745,15 @@ export const MEDIA_ITEMS: MediaItem[] = [
     type: 'photo',
     region: 'Antarctica',
     creator: 'British Antarctic Survey Ecology Unit',
+    institution: 'British Antarctic Survey (BAS)',
     date: '2024-08-30',
     thumbnailUrl: 'https://images.unsplash.com/photo-1598439210625-5067c578f3f6?auto=format&fit=crop&w=800&q=80',
     mediaUrl: 'https://images.unsplash.com/photo-1598439210625-5067c578f3f6?auto=format&fit=crop&w=1600&q=90',
     tags: ['Penguins', 'Weddell Sea', 'Ecosystem', 'Wildlife'],
-    scientificContext: 'Documenting the bio-indicator species that relies entirely on frozen ocean surfaces.'
+    scientificContext: 'Documenting the bio-indicator species that relies entirely on frozen ocean surfaces.',
+    relatedLocationId: 'loc-weddell-wildlife',
+    relatedResearchId: 'res-emperor-breeding-failure',
+    resolution: 'High Resolution Raw'
   },
   {
     id: 'med-jakobshavn-calving',
@@ -485,12 +763,15 @@ export const MEDIA_ITEMS: MediaItem[] = [
     type: 'video',
     region: 'Arctic',
     creator: 'GEUS / Geological Survey of Denmark',
+    institution: 'GEUS',
     date: '2024-05-18',
     duration: '08:15',
     thumbnailUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
     mediaUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
     tags: ['Calving', 'Greenland', 'Iceberg', 'Ocean Thermal'],
-    scientificContext: 'Direct visual evidence of kinetic glacier discharge transferring land ice directly into sea level rise.'
+    scientificContext: 'Direct visual evidence of kinetic glacier discharge transferring land ice directly into sea level rise.',
+    relatedLocationId: 'loc-jakobshavn',
+    resolution: '4K Ultra HD'
   },
   {
     id: 'med-glacier-radar',
@@ -500,15 +781,130 @@ export const MEDIA_ITEMS: MediaItem[] = [
     type: 'photo',
     region: 'Antarctica',
     creator: 'European Space Agency (Copernicus Sentinel)',
+    institution: 'ESA / Copernicus',
     date: '2024-09-02',
     thumbnailUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80',
     mediaUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1600&q=90',
     tags: ['Radar', 'Satellite', 'InSAR', 'Remote Sensing'],
-    scientificContext: 'Demonstrates how spaceborne microwave radar penetrates polar cloud cover to measure millimeter-scale crustal deformation.'
+    scientificContext: 'Demonstrates how spaceborne microwave radar penetrates polar cloud cover to measure millimeter-scale crustal deformation.',
+    relatedLocationId: 'loc-thwaites',
+    relatedResearchId: 'res-thwaites-grounding',
+    resolution: 'Satellite GeoTIFF / 10m'
+  }
+];
+
+export const DEMO_GENERATED_OUTREACH: GeneratedOutreachItem[] = [
+  {
+    id: 'out-isea44-article',
+    sourceId: 'rep-isea-44-cruise',
+    sourceTitle: 'Integrated Scientific Cruise & Ice Sheet Profiling Report (ISEA 44)',
+    sourceType: 'Expedition Report',
+    sourceInstitution: 'Ministry of Earth Sciences (MoES) / NCPOR',
+    format: 'website_article',
+    formatLabel: 'Website Feature Article',
+    title: 'Secrets of the Deep Ice: How Indian Scientists Discovered 850 Years of Climate History in Antarctica',
+    content: `From the howling blizzards of the Larsemann Hills to the high plateau of Queen Maud Land, the 44th Indian Scientific Expedition to Antarctica has returned with extraordinary discoveries.
+
+Drilled from more than 100 meters beneath the frozen continent, newly recovered ice cores act like frozen time capsules. By analyzing ancient atmospheric gases trapped in microscopic air bubbles, Indian researchers at NCPOR have uncovered how ancient monsoon cycles directly coincided with shifts in polar ocean currents centuries before the industrial era.
+
+Furthermore, India's Bharati Station achieved an environmental milestone: the commissioning of a zero-emission renewable microgrid combining custom vertical-axis wind turbines designed to withstand wind gusts exceeding 160 kilometers per hour.`,
+    reviewStatus: 'published',
+    createdAt: '2025-04-18',
+    updatedAt: '2025-04-20',
+    attachedMediaIds: ['med-bharati-life'],
+    attachedDatasetId: 'data-bharati-met',
+    reviewNotes: 'Reviewed by MoES Science Communication Board. Approved for open portal publication.',
+    reviewedBy: 'MoES Editorial Panel',
+    publishedChannels: ['Official MoES Portal', 'Press Information Bureau (PIB)', 'POLARIS Stories'],
+    publishedAt: '2025-04-21',
+    targetAudience: 'General Public & Educators',
+    readingLevel: 'Grade 8 (Accessible)'
+  },
+  {
+    id: 'out-isea44-insta',
+    sourceId: 'rep-isea-44-cruise',
+    sourceTitle: 'Integrated Scientific Cruise & Ice Sheet Profiling Report (ISEA 44)',
+    sourceType: 'Expedition Report',
+    sourceInstitution: 'Ministry of Earth Sciences (MoES) / NCPOR',
+    format: 'instagram_post',
+    formatLabel: 'Instagram Visual Carousel',
+    title: 'Instagram Carousel: 5 Things You Didn\'t Know Happened on India\'s 44th Antarctic Expedition',
+    content: `❄️ 120 METERS INTO THE ICE SHEET: India\'s 44th Antarctic Expedition just concluded, and the discoveries are mind-blowing! Swipe ➡️ to discover:
+
+1️⃣ Ancient Time Capsules: Scientists drilled deep into the Antarctic plateau to extract 850-year-old ice cores.
+2️⃣ Green Power at -40°C: Bharati Station is now partly powered by wind turbines built to survive super-blizzards!
+3️⃣ Southern Ocean Floats: 6 robotic ocean floats were dropped into the stormy circumpolar current to measure ocean heat.
+4️⃣ Gondwanaland Connection: New rock samples prove India and Antarctica were once stitched together 120 million years ago.
+
+📍 Location: Bharati Station, Larsemann Hills (69°24\'S)
+🔬 Led by: Ministry of Earth Sciences & @ncpor_goa
+
+#PolarScience #Antarctica #IndiaInAntarctica #MoES #ClimateResearch #NCPOR #ScienceOutreach`,
+    reviewStatus: 'approved',
+    createdAt: '2025-04-19',
+    updatedAt: '2025-04-22',
+    attachedMediaIds: ['med-bharati-life'],
+    reviewNotes: 'Verified factually by lead glaciologist. Approved for social dissemination.',
+    reviewedBy: 'Dr. Rahul Mohan (Chief Scientist)',
+    publishedChannels: ['Instagram @moes_india', 'X @moesgoi'],
+    targetAudience: 'Youth & Students',
+    readingLevel: 'Accessible'
+  },
+  {
+    id: 'out-thwaites-linkedin',
+    sourceId: 'rep-itgc-icefin-report',
+    sourceTitle: 'Sub-Ice Shelf Cavity Exploration at Thwaites Glacier',
+    sourceType: 'Expedition Report',
+    sourceInstitution: 'ITGC Collaboration',
+    format: 'linkedin_post',
+    formatLabel: 'LinkedIn Scientific Update',
+    title: 'Autonomous Robotics in Extreme Cryospheric Environments: The Icefin Breakthrough',
+    content: `Engineering resilience meets oceanographic science: Lowering an autonomous robot down a 600-meter borehole through an Antarctic ice shelf is one of the most daring robotic missions ever attempted.
+
+The International Thwaites Glacier Collaboration (ITGC) deployed the Icefin submersible directly into the grounding zone cavity of West Antarctica. The data revealed two critical insights:
+1. Warm Circumpolar Deep Water (+1.5°C above in-situ freezing) is actively entering basal troughs.
+2. Basal melting is structurally concentrated along vertical crevasses, accelerating shelf unpinning.
+
+This empirical research provides vital ground truth for global sea-level rise models, directly impacting coastal infrastructure planning worldwide.
+
+Read the peer-reviewed dataset and field report on POLARIS: https://polaris.org/repository/rep-itgc-icefin-report
+
+#Oceanography #Robotics #Glaciology #ClimateTech #PolarScience #Geospatial`,
+    reviewStatus: 'under_review',
+    createdAt: '2025-04-22',
+    updatedAt: '2025-04-23',
+    attachedMediaIds: ['med-thwaites-icefin'],
+    attachedDatasetId: 'data-ice-velocity-sentinel',
+    reviewNotes: 'Pending final review by ITGC communications officer.',
+    publishedChannels: ['LinkedIn Research Stream'],
+    targetAudience: 'Researchers & Engineers',
+    readingLevel: 'Professional'
   }
 ];
 
 export const DEMO_SCIENCE_STORIES: ScienceStory[] = [
+  {
+    id: 'story-isea44-flagship',
+    sourceResearchId: 'res-gondwana-breakup',
+    title: 'How India and Antarctica Once Shared a Single Mountain Range',
+    originalScientificHeadline: 'Geochemical Provenance and Crustal Rifting Signatures of the Larsemann Hills, East Antarctica (MoES / NCPOR)',
+    scientificSummary: 'Field investigations and isotopic zircon dating from the Larsemann Hills collected near Bharati Station reveal metamorphic events documenting the assembly and subsequent breakup of the Gondwana supercontinent along the Indo-Antarctic conjugate margin.',
+    studentExplanation: 'Did you know that millions of years ago, India and Antarctica were best friends joined together in one giant supercontinent called Gondwanaland? When Indian scientists at Bharati Station picked up rocks from the icy hills, they found the exact same mineral fingerprints that you find in the Eastern Ghats mountains along the coast of India!',
+    publicStory: 'On a rocky promontory overlooking the icy Southern Ocean, Indian researchers at Bharati Station walk on rocks that hold the birth certificate of our modern planet. Over 120 million years ago, India and Antarctica were welded together. As continental drift pulled them apart, India drifted northward across the equator while Antarctica froze at the South Pole. Today, through continuous research conducted by the Ministry of Earth Sciences, scientists are matching the geological fingerprints of both continents, unlocking secrets about how our planet changes over deep time.',
+    socialMediaThread: [
+      '🇮🇳 1/4 Did you know India and Antarctica were once stitched together? Field rocks collected by MoES researchers at Bharati Station share the exact same zircon age fingerprints as the Eastern Ghats in India.',
+      '🧭 2/4 120 million years ago, tectonic forces broke the Gondwanaland supercontinent apart. India sailed north to crash into Asia and form the Himalayas, while Antarctica drifted to the frozen pole.',
+      '🔬 3/4 The 44th Indian Antarctic Expedition has gathered pristine sediment cores to reconstruct the exact ancient rifting timelines.',
+      '📖 4/4 Explore the open report and geological logs on POLARIS: https://polaris.org/repository/rep-isea-44-cruise'
+    ],
+    keyMetaphor: 'Two puzzle pieces split by an ocean, retaining the identical grain of wood',
+    targetAudience: 'General Public',
+    readingLevel: 'Grade 8 (Accessible to non-specialists)',
+    createdDate: '2025-04-20',
+    author: 'MoES Science Outreach Desk',
+    reviewStatus: 'published',
+    sourceInstitution: 'Ministry of Earth Sciences (MoES) / NCPOR'
+  },
   {
     id: 'story-thwaites-cork',
     sourceResearchId: 'res-thwaites-grounding',
@@ -527,7 +923,9 @@ export const DEMO_SCIENCE_STORIES: ScienceStory[] = [
     targetAudience: 'General Public',
     readingLevel: 'Grade 8 (Accessible to non-specialists)',
     createdDate: '2024-03-12',
-    author: 'POLARIS Science Outreach Desk'
+    author: 'POLARIS Science Outreach Desk',
+    reviewStatus: 'published',
+    sourceInstitution: 'International Thwaites Glacier Collaboration'
   }
 ];
 
@@ -630,7 +1028,7 @@ export const PRESET_AI_KNOWLEDGE: Record<string, AIResponse> = {
   animals: {
     query: 'What animals live in the Arctic?',
     simpleExplanation: 'The Arctic is home to polar bears, arctic foxes, narwhals (the "unicorns of the sea"), walruses, beluga whales, muskoxen, reindeer, and millions of migratory seabirds. Unlike Antarctica (which is surrounded by ocean), the Arctic has land where indigenous peoples and terrestrial mammals have thrived for thousands of years.',
-    scientificExplanation: 'The Arctic marine and terrestrial food web is anchored by sea ice algae and copepods (Calanus hyperboreus), supporting vast schools of Arctic cod (Boreogadus saida). These feed apex predators such as the Polar Bear (Ursus maritimus), Ringed Seal (Pusa hispida), and Cetaceans including Bowhead Whales and Narwhals (Monodon monoceros). Terrestrial tundra supports large ungulates (Caribou/Reindeer, Muskoxen) exhibiting high insulative morphological adaptations.',
+    scientificExplanation: 'The Arctic marine and terrestrial food web is anchored by sea ice algae and copepods, supporting vast schools of Arctic cod. These feed apex predators such as the Polar Bear, Ringed Seal, and Cetaceans including Bowhead Whales and Narwhals. Terrestrial tundra supports large ungulates exhibiting high insulative morphological adaptations.',
     keyFacts: [
       'Polar bears live ONLY in the Arctic; penguins live almost exclusively in the Southern Hemisphere / Antarctica.',
       'Narwhal tusks are actually an elongated canine tooth with up to 10 million nerve endings used to sense ocean salinity and temperature.',

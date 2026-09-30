@@ -47,50 +47,31 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* Header */}
-      <div className="space-y-2 border-b border-slate-800 pb-6">
-        <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono tracking-widest uppercase">
-          <Film className="w-3.5 h-3.5" />
-          <span>Polar Discovery Cinema & Photographic Archives</span>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Polar Media & Documentary Portal
-        </h1>
-        <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
-          High-definition field photography, expedition footage, submersible underwater video logs, and first-hand polar scientist journals.
-        </p>
-      </div>
-
-      {/* Filter Ribbon */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        {/* Categories Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-cyan-600 text-white shadow-sm'
-                  : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      <div className="space-y-2 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-mono tracking-widest uppercase mb-1">
+            <Film className="w-3.5 h-3.5 text-sky-400" />
+            <span>Polar Field Cinematography & Photographic Archives</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            Polar Media & Documentary Portal
+          </h1>
+          <p className="text-sm text-slate-400 max-w-2xl leading-relaxed">
+            High-definition field photography, expedition footage, submersible underwater video logs, and first-hand polar scientist journals.
+          </p>
         </div>
 
         {/* Region Selector */}
-        <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0 text-xs">
-          <span className="text-slate-500 font-mono">Region:</span>
+        <div className="flex items-center gap-1 self-start md:self-auto bg-slate-900 border border-slate-800 p-0.5 rounded text-xs">
           {['All', 'Antarctica', 'Arctic'].map((r) => (
             <button
               key={r}
               onClick={() => setSelectedRegion(r)}
-              className={`px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
+              className={`px-3 py-1 rounded transition-colors cursor-pointer text-xs font-medium ${
                 selectedRegion === r
-                  ? 'bg-slate-800 text-cyan-300 border border-slate-700 font-medium'
+                  ? 'bg-slate-800 text-white font-semibold'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -100,13 +81,30 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
         </div>
       </div>
 
+      {/* Filter Ribbon */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-3 py-1 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+              selectedCategory === cat
+                ? 'bg-slate-800 text-white border border-slate-700 font-semibold'
+                : 'bg-slate-900/60 text-slate-400 hover:text-white border border-slate-800/80'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {/* Media Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredMedia.map((item) => (
           <div
             key={item.id}
             onClick={() => setActiveMedia(item)}
-            className="group bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/40 rounded-2xl overflow-hidden shadow-lg transition-all cursor-pointer flex flex-col justify-between"
+            className="group bg-[#0b101d] hover:bg-[#0e1526] border border-slate-800 hover:border-slate-700 rounded-lg overflow-hidden shadow transition-all cursor-pointer flex flex-col justify-between"
           >
             {/* Visual Thumbnail Frame */}
             <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
@@ -119,42 +117,41 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
 
               {/* Type Badge & Duration */}
-              <div className="absolute top-3 left-3 flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md border border-slate-700 text-[10px] font-mono text-cyan-300 uppercase">
+              <div className="absolute top-2.5 left-2.5 flex items-center gap-2">
+                <span className="ds-badge ds-badge-neutral text-[10px]">
                   {item.category}
                 </span>
                 {item.duration && (
-                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-slate-300">
+                  <span className="px-2 py-0.5 rounded bg-black/80 backdrop-blur-md text-[10px] font-mono text-slate-300">
                     {item.duration}
                   </span>
                 )}
               </div>
 
               {/* Play Button Indicator */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                <div className="w-12 h-12 rounded-full bg-cyan-500/90 text-slate-950 flex items-center justify-center shadow-2xl">
+              <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all">
+                <div className="w-10 h-10 rounded-full bg-slate-900/90 border border-slate-700 text-sky-400 flex items-center justify-center shadow-lg">
                   {item.type === 'video' ? (
-                    <Play className="w-5 h-5 fill-current ml-0.5" />
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
                   ) : item.type === 'audio' ? (
-                    <Mic className="w-5 h-5 text-slate-950" />
+                    <Mic className="w-4 h-4 text-sky-400" />
                   ) : (
-                    <Camera className="w-5 h-5 text-slate-950" />
+                    <Camera className="w-4 h-4 text-sky-400" />
                   )}
                 </div>
               </div>
             </div>
 
             {/* Content Details */}
-            <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-              <div className="space-y-2">
-                {/* Unboxed metadata line with typographic separators */}
+            <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
                   <span>{item.region}</span>
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true" className="text-slate-600">·</span>
                   <span>{item.date}</span>
                 </div>
 
-                <h3 className="text-base font-bold text-white group-hover:text-cyan-200 transition-colors leading-snug">
+                <h3 className="text-base font-bold text-white group-hover:text-sky-200 transition-colors leading-snug">
                   {item.title}
                 </h3>
 
@@ -164,9 +161,9 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
               </div>
 
               {/* Tags & Creator */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500 font-mono">
                 <span className="truncate max-w-[180px]">{item.creator}</span>
-                <span className="text-cyan-400 font-medium group-hover:underline">View Media →</span>
+                <span className="text-sky-400 font-medium group-hover:underline">View Media →</span>
               </div>
             </div>
           </div>
@@ -175,87 +172,88 @@ export const MediaPortalView: React.FC<MediaPortalViewProps> = ({ onNavigate, pr
 
       {/* Media Detail Modal / Viewer */}
       {activeMedia && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-          <div className="bg-[#090f1d] border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#0b101d] border border-slate-750 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-5 sm:p-6 space-y-5 shadow-2xl relative">
             <button
               onClick={() => setActiveMedia(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
 
             {/* Media Presentation Display */}
-            <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800 relative flex items-center justify-center">
+            <div className="aspect-video w-full rounded overflow-hidden bg-black border border-slate-800 relative flex items-center justify-center">
               <img
                 src={activeMedia.thumbnailUrl}
                 alt={activeMedia.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center p-6 text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-cyan-500 text-slate-950 flex items-center justify-center shadow-xl animate-pulse">
-                  <Play className="w-7 h-7 fill-current ml-1" />
+              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center p-6 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-700 text-sky-400 flex items-center justify-center shadow-xl">
+                  <Play className="w-5 h-5 fill-current ml-0.5" />
                 </div>
-                <div className="text-white text-sm font-semibold max-w-md">
+                <div className="text-white text-sm font-semibold">
                   Interactive Polar Stream Preview Active
                 </div>
-                <div className="text-xs text-slate-300 font-mono">
+                <div className="text-xs text-slate-400 font-mono">
                   Duration: {activeMedia.duration || 'Full HD Resolution'} · {activeMedia.region}
                 </div>
               </div>
             </div>
 
             {/* Meta & Title */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs font-mono text-cyan-400">
-                <span>{activeMedia.category}</span>
-                <span aria-hidden="true">·</span>
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-slate-400">
+                <span className="ds-badge ds-badge-neutral text-[10px]">{activeMedia.category}</span>
+                <span aria-hidden="true" className="text-slate-600">·</span>
                 <span>{activeMedia.region}</span>
-                <span aria-hidden="true">·</span>
+                <span aria-hidden="true" className="text-slate-600">·</span>
                 <span>{activeMedia.date}</span>
-                <span aria-hidden="true">·</span>
+                <span aria-hidden="true" className="text-slate-600">·</span>
                 <span>Creator: {activeMedia.creator}</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">
+              <h2 className="text-xl font-bold text-white">
                 {activeMedia.title}
               </h2>
-              <p className="text-sm text-slate-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                 {activeMedia.description}
               </p>
             </div>
 
             {/* Scientific Context */}
-            <div className="p-4 bg-cyan-950/20 border-l-2 border-cyan-400 rounded-r-xl space-y-1">
-              <div className="text-xs font-bold text-cyan-300 uppercase tracking-wide">
+            <div className="p-3.5 bg-slate-900 border-l-2 border-sky-400 rounded-r space-y-1">
+              <div className="text-xs font-semibold text-white uppercase tracking-wide">
                 Scientific Context & Field Methodology
               </div>
-              <div className="text-xs text-slate-300 leading-relaxed">
+              <div className="text-xs text-slate-400 leading-relaxed">
                 {activeMedia.scientificContext}
               </div>
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-wrap gap-3 pt-2 border-t border-slate-800">
+            <div className="flex flex-wrap gap-2.5 pt-2 border-t border-slate-800">
               <button
                 onClick={() => {
                   const query = `Tell me more about the scientific context of ${activeMedia.title}`;
                   setActiveMedia(null);
                   onNavigate('ai', { query });
                 }}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-500 rounded-xl transition-colors cursor-pointer"
+                className="ds-btn-primary text-xs py-1.5 px-3"
               >
-                <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                <Sparkles className="w-3.5 h-3.5 text-slate-950" />
                 <span>Ask Polar AI About This Media</span>
               </button>
 
               <button
                 onClick={() => {
+                  const mediaId = activeMedia.id;
                   setActiveMedia(null);
-                  onNavigate('story-studio');
+                  onNavigate('studio', { sourceId: activeMedia.relatedResearchId || 'res-thwaites-grounding', sourceType: 'Publication' });
                 }}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors cursor-pointer"
+                className="ds-btn-secondary text-xs py-1.5 px-3"
               >
-                <span>Generate Story Article</span>
+                <span>Generate Outreach Package</span>
               </button>
             </div>
           </div>

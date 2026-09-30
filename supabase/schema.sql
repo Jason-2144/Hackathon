@@ -1,115 +1,30 @@
--- POLARIS: Polar Science Intelligence & Media Portal
--- Supabase PostgreSQL Database Schema
--- Problem Statement: PS 26063
+-- POLARIS: Polar Science Knowledge, Outreach & Media Dissemination Platform
+-- Official Problem Statement: PS 26063
+-- Organization: Ministry of Earth Sciences (MoES), Government of India
+-- Category: Software | Theme: Smart Education
 
 -- 1. Enable UUID and Full-Text Search Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
--- 2. CATEGORIES TABLE
-CREATE TABLE IF NOT EXISTS categories (
+-- 2. INSTITUTIONS TABLE (MoES, NCPOR, BAS, AWI, NSIDC, NASA JPL)
+CREATE TABLE IF NOT EXISTS institutions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL UNIQUE,
-  slug TEXT NOT NULL UNIQUE,
-  description TEXT,
-  icon TEXT,
+  acronym TEXT NOT NULL,
+  country TEXT NOT NULL,
+  headquarters TEXT,
+  website_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. USERS / RESEARCHERS TABLE
-CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email TEXT UNIQUE NOT NULL,
-  full_name TEXT NOT NULL,
-  institution TEXT,
-  role TEXT DEFAULT 'contributor' CHECK (role IN ('admin', 'scientist', 'educator', 'contributor', 'public')),
-  avatar_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 4. SCIENTISTS DIRECTORY
-CREATE TABLE IF NOT EXISTS scientists (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  name TEXT NOT NULL,
-  institution TEXT NOT NULL,
-  specialization TEXT NOT NULL,
-  bio TEXT,
-  avatar_url TEXT,
-  publications_count INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 5. POLAR LOCATIONS TABLE
-CREATE TABLE IF NOT EXISTS locations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  region TEXT NOT NULL CHECK (region IN ('Antarctica', 'Arctic', 'Global Polar')),
-  category TEXT NOT NULL CHECK (category IN ('Glacier', 'Research Station', 'Expedition Site', 'Wildlife Habitat', 'Climate Observatory', 'Oceanographic Zone')),
-  latitude NUMERIC(9, 6) NOT NULL,
-  longitude NUMERIC(9, 6) NOT NULL,
-  elevation_meters NUMERIC(7, 2),
-  summary TEXT NOT NULL,
-  scientific_significance TEXT NOT NULL,
-  operating_country TEXT,
-  established_year INT,
-  current_status TEXT DEFAULT 'Active Monitoring',
-  key_findings TEXT[] DEFAULT '{}',
-  temperature_anomaly_c NUMERIC(4, 2),
-  ice_velocity_m_per_year NUMERIC(8, 2),
-  thumbnail_url TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 6. RESEARCH PAPERS & REPORTS TABLE
-CREATE TABLE IF NOT EXISTS research (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  abstract TEXT NOT NULL,
-  authors TEXT[] NOT NULL,
-  institution TEXT NOT NULL,
-  year INT NOT NULL,
-  region TEXT NOT NULL CHECK (region IN ('Antarctica', 'Arctic', 'Global Polar')),
-  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
-  content_type TEXT NOT NULL CHECK (content_type IN ('Research Paper', 'Dataset', 'Satellite Data', 'Research Video', 'Photography', 'Scientific Report', 'Expedition Record')),
-  doi TEXT,
-  peer_reviewed BOOLEAN DEFAULT true,
-  citation_count INT DEFAULT 0,
-  topics TEXT[] DEFAULT '{}',
-  key_takeaway TEXT,
-  primary_location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
-  search_vector TSVECTOR,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 7. POLAR DATASETS TABLE
-CREATE TABLE IF NOT EXISTS datasets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  title TEXT NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  description TEXT NOT NULL,
-  provider TEXT NOT NULL,
-  region TEXT NOT NULL CHECK (region IN ('Antarctica', 'Arctic', 'Global Polar')),
-  temporal_coverage TEXT NOT NULL,
-  update_frequency TEXT DEFAULT 'Monthly',
-  parameters TEXT[] DEFAULT '{}',
-  file_format TEXT NOT NULL,
-  file_size_mb NUMERIC(8, 2),
-  download_url TEXT,
-  sample_points JSONB DEFAULT '[]',
-  related_research_id UUID REFERENCES research(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 8. EXPEDITIONS TABLE
+-- 3. EXPEDITIONS TABLE
 CREATE TABLE IF NOT EXISTS expeditions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   vessel_or_team TEXT NOT NULL,
   lead_scientist TEXT NOT NULL,
+  institution_id UUID REFERENCES institutions(id) ON DELETE SET NULL,
   start_date DATE NOT NULL,
   end_date DATE,
   status TEXT DEFAULT 'Completed' CHECK (status IN ('Completed', 'Ongoing', 'Planned')),
@@ -122,97 +37,167 @@ CREATE TABLE IF NOT EXISTS expeditions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 9. MEDIA ASSETS TABLE
-CREATE TABLE IF NOT EXISTS media (
+-- 4. EXPEDITION REPORTS TABLE (Central Source of Truth)
+CREATE TABLE IF NOT EXISTS expedition_reports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  expedition_id UUID REFERENCES expeditions(id) ON DELETE CASCADE,
+  report_number TEXT NOT NULL UNIQUE, -- e.g. MoES-ISEA-44-CR-01
+  title TEXT NOT NULL,
+  lead_author TEXT NOT NULL,
+  institution TEXT NOT NULL,
+  publication_date DATE NOT NULL,
+  summary TEXT NOT NULL,
+  methodology TEXT NOT NULL,
+  key_findings TEXT[] DEFAULT '{}',
+  sections JSONB DEFAULT '[]',
+  download_url TEXT,
+  search_vector TSVECTOR,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. RESEARCH PUBLICATIONS TABLE
+CREATE TABLE IF NOT EXISTS research_publications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  abstract TEXT NOT NULL,
+  authors TEXT[] NOT NULL,
+  institution TEXT NOT NULL,
+  publication_year INT NOT NULL,
+  region TEXT NOT NULL,
+  category TEXT NOT NULL,
+  doi TEXT,
+  peer_reviewed BOOLEAN DEFAULT true,
+  citation_count INT DEFAULT 0,
+  topics TEXT[] DEFAULT '{}',
+  key_takeaway TEXT,
+  related_expedition_id UUID REFERENCES expeditions(id) ON DELETE SET NULL,
+  search_vector TSVECTOR,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 6. SCIENTIFIC DATASETS TABLE
+CREATE TABLE IF NOT EXISTS scientific_datasets (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  region TEXT NOT NULL,
+  temporal_coverage TEXT NOT NULL,
+  update_frequency TEXT DEFAULT 'Monthly',
+  parameters TEXT[] DEFAULT '{}',
+  file_format TEXT NOT NULL,
+  file_size_mb NUMERIC(8, 2),
+  download_url TEXT,
+  sample_points JSONB DEFAULT '[]',
+  related_expedition_id UUID REFERENCES expeditions(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 7. MEDIA ASSETS TABLE (Connected to Science & Metadata)
+CREATE TABLE IF NOT EXISTS media_assets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
   category TEXT NOT NULL CHECK (category IN ('Videos', 'Photography', 'Scientist Stories', 'Expeditions', 'Satellite Imagery', 'Wildlife', 'Climate Stories')),
   media_type TEXT NOT NULL CHECK (media_type IN ('video', 'photo', 'audio')),
-  region TEXT NOT NULL CHECK (region IN ('Antarctica', 'Arctic', 'Global Polar')),
+  region TEXT NOT NULL,
   creator TEXT NOT NULL,
+  institution TEXT NOT NULL,
   publication_date DATE NOT NULL,
   duration TEXT,
   thumbnail_url TEXT NOT NULL,
   media_url TEXT NOT NULL,
   tags TEXT[] DEFAULT '{}',
   scientific_context TEXT,
-  related_location_id UUID REFERENCES locations(id) ON DELETE SET NULL,
+  related_expedition_id UUID REFERENCES expeditions(id) ON DELETE SET NULL,
+  resolution TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 10. SCIENCE STORIES (Science Outreach Generator)
-CREATE TABLE IF NOT EXISTS stories (
+-- 8. INSTITUTIONAL ACTIVITIES TABLE (MoES Events, Conferences, Milestones)
+CREATE TABLE IF NOT EXISTS institutional_activities (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  source_research_id UUID REFERENCES research(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
-  original_scientific_headline TEXT NOT NULL,
-  scientific_summary TEXT NOT NULL,
-  student_explanation TEXT NOT NULL,
-  public_story TEXT NOT NULL,
-  social_media_thread JSONB DEFAULT '[]',
-  key_metaphor TEXT,
+  activity_type TEXT NOT NULL CHECK (activity_type IN ('Expedition', 'Conference', 'Research Event', 'Outreach Program', 'Announcement', 'Workshop', 'Scientific Achievement', 'Institutional Update')),
+  institution TEXT NOT NULL,
+  event_date DATE NOT NULL,
+  location TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  description TEXT NOT NULL,
+  lead_coordinator TEXT NOT NULL,
+  participants_count INT,
+  status TEXT DEFAULT 'Completed' CHECK (status IN ('Completed', 'Ongoing', 'Upcoming')),
+  related_expedition_id UUID REFERENCES expeditions(id) ON DELETE SET NULL,
+  badge_text TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 9. OUTREACH CONTENT & HUMAN REVIEW PIPELINE (Content Studio)
+CREATE TABLE IF NOT EXISTS outreach_content (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  source_id TEXT NOT NULL,
+  source_title TEXT NOT NULL,
+  source_type TEXT NOT NULL CHECK (source_type IN ('Expedition Report', 'Publication', 'Dataset', 'Activity', 'Expedition')),
+  source_institution TEXT NOT NULL,
+  format TEXT NOT NULL CHECK (format IN ('website_article', 'public_article', 'student_explanation', 'instagram_post', 'linkedin_post', 'x_post', 'youtube_description', 'video_script', 'infographic_content')),
+  format_label TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  review_status TEXT DEFAULT 'ai_generated' CHECK (review_status IN ('draft', 'ai_generated', 'under_review', 'approved', 'published')),
+  attached_media_ids TEXT[] DEFAULT '{}',
+  attached_dataset_id TEXT,
+  review_notes TEXT,
+  reviewed_by TEXT,
+  published_channels TEXT[] DEFAULT '{}',
+  published_at TIMESTAMPTZ,
   target_audience TEXT DEFAULT 'General Public',
   reading_level TEXT DEFAULT 'Grade 8',
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 11. AI QUERIES & CITATION LOGS
-CREATE TABLE IF NOT EXISTS ai_queries (
+-- 10. POLAR LOCATIONS TABLE
+CREATE TABLE IF NOT EXISTS polar_locations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_query TEXT NOT NULL,
-  simple_explanation TEXT NOT NULL,
-  scientific_explanation TEXT NOT NULL,
-  key_facts TEXT[] DEFAULT '{}',
-  sources_cited JSONB DEFAULT '[]',
+  name TEXT NOT NULL,
+  region TEXT NOT NULL CHECK (region IN ('Antarctica', 'Arctic', 'Global Polar')),
+  category TEXT NOT NULL,
+  latitude NUMERIC(9, 6) NOT NULL,
+  longitude NUMERIC(9, 6) NOT NULL,
+  elevation_meters NUMERIC(7, 2),
+  summary TEXT NOT NULL,
+  scientific_significance TEXT NOT NULL,
+  operating_country TEXT,
+  temperature_anomaly_c NUMERIC(4, 2),
+  ice_velocity_m_per_year NUMERIC(8, 2),
+  thumbnail_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 12. INDEXES & FULL-TEXT SEARCH
-CREATE INDEX IF NOT EXISTS idx_research_region ON research(region);
-CREATE INDEX IF NOT EXISTS idx_research_year ON research(year);
-CREATE INDEX IF NOT EXISTS idx_locations_category ON locations(category);
-CREATE INDEX IF NOT EXISTS idx_datasets_provider ON datasets(provider);
+-- 11. INDEXES & SEARCH VECTORS
+CREATE INDEX IF NOT EXISTS idx_exp_reports_expedition ON expedition_reports(expedition_id);
+CREATE INDEX IF NOT EXISTS idx_research_pub_expedition ON research_publications(related_expedition_id);
+CREATE INDEX IF NOT EXISTS idx_datasets_expedition ON scientific_datasets(related_expedition_id);
+CREATE INDEX IF NOT EXISTS idx_media_expedition ON media_assets(related_expedition_id);
+CREATE INDEX IF NOT EXISTS idx_outreach_status ON outreach_content(review_status);
 
--- Trigger for full-text search indexing on research
-CREATE OR REPLACE FUNCTION update_research_search_vector() RETURNS trigger AS $$
-BEGIN
-  NEW.search_vector :=
-    setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
-    setweight(to_tsvector('english', coalesce(NEW.abstract, '')), 'B') ||
-    setweight(to_tsvector('english', coalesce(NEW.key_takeaway, '')), 'C') ||
-    setweight(to_tsvector('english', array_to_string(NEW.topics, ' ')), 'B');
-  RETURN NEW;
-END
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS trg_research_search_vector ON research;
-CREATE TRIGGER trg_research_search_vector
-BEFORE INSERT OR UPDATE ON research
-FOR EACH ROW EXECUTE FUNCTION update_research_search_vector();
-
--- 13. ROW LEVEL SECURITY (RLS) POLICIES
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE locations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE research ENABLE ROW LEVEL SECURITY;
-ALTER TABLE datasets ENABLE ROW LEVEL SECURITY;
+-- 12. ROW LEVEL SECURITY (RLS)
+ALTER TABLE institutions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expeditions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE media ENABLE ROW LEVEL SECURITY;
-ALTER TABLE stories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ai_queries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE expedition_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE research_publications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE scientific_datasets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE media_assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE institutional_activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outreach_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE polar_locations ENABLE ROW LEVEL SECURITY;
 
--- Public Read Policies
-CREATE POLICY "Allow public read access to categories" ON categories FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to locations" ON locations FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to research" ON research FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to datasets" ON datasets FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to expeditions" ON expeditions FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to media" ON media FOR SELECT USING (true);
-CREATE POLICY "Allow public read access to stories" ON stories FOR SELECT USING (true);
-
--- Authenticated / Contributor Write Policies
-CREATE POLICY "Allow authenticated inserts to research" ON research FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow authenticated inserts to stories" ON stories FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow authenticated inserts to datasets" ON datasets FOR INSERT WITH CHECK (true);
+-- Open Read Access for Public Outreach
+CREATE POLICY "Public read expeditions" ON expeditions FOR SELECT USING (true);
+CREATE POLICY "Public read reports" ON expedition_reports FOR SELECT USING (true);
+CREATE POLICY "Public read publications" ON research_publications FOR SELECT USING (true);
+CREATE POLICY "Public read datasets" ON scientific_datasets FOR SELECT USING (true);
+CREATE POLICY "Public read media" ON media_assets FOR SELECT USING (true);
+CREATE POLICY "Public read activities" ON institutional_activities FOR SELECT USING (true);
+CREATE POLICY "Public read published outreach" ON outreach_content FOR SELECT USING (true);
+CREATE POLICY "Public read locations" ON polar_locations FOR SELECT USING (true);

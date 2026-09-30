@@ -27,6 +27,7 @@ export interface PolarLocation {
   relatedResearchIds: string[];
   relatedDatasetIds: string[];
   relatedMediaIds: string[];
+  relatedExpeditionIds?: string[];
   temperatureAnomalyC: number;
   iceVelocityMetersPerYear?: number;
   thumbnailUrl: string;
@@ -39,14 +40,16 @@ export type ContentType =
   | 'Research Video'
   | 'Photography'
   | 'Scientific Report'
-  | 'Expedition Record';
+  | 'Expedition Record'
+  | 'Expedition Report'
+  | 'Institutional Activity';
 
 export interface ResearchItem {
   id: string;
   title: string;
   abstract: string;
   authors: string[];
-  institution: string;
+  institution: string; // e.g. Ministry of Earth Sciences (MoES) / NCPOR
   year: number;
   region: PolarRegion;
   category: string;
@@ -57,6 +60,8 @@ export interface ResearchItem {
   topics: string[];
   keyTakeaway: string;
   datasetIds?: string[];
+  relatedExpeditionId?: string;
+  relatedMediaIds?: string[];
   readingTimeMin: number;
 }
 
@@ -64,14 +69,16 @@ export interface PolarDataset {
   id: string;
   title: string;
   description: string;
-  provider: string; // e.g. NASA JPL, NSIDC, ESA Copernicus, BAS
+  provider: string; // e.g. MoES / NCPOR, NASA JPL, NSIDC, ESA Copernicus, BAS
   region: PolarRegion;
-  temporalCoverage: string; // e.g. 1979 - 2026
+  temporalCoverage: string;
   updateFrequency: string;
   parameters: string[];
-  fileFormat: string; // NetCDF, GeoTIFF, CSV
+  fileFormat: string;
   fileSizeMb: number;
   downloadUrl?: string;
+  relatedExpeditionId?: string;
+  relatedPublicationIds?: string[];
   sampleDataPoints: {
     label: string;
     value: number;
@@ -80,11 +87,37 @@ export interface PolarDataset {
   }[];
 }
 
+export interface Researcher {
+  name: string;
+  role: string;
+  institution: string;
+  specialization: string;
+  avatarUrl?: string;
+}
+
+export interface ExpeditionReport {
+  id: string;
+  expeditionId: string;
+  reportNumber: string; // e.g. MoES-ISEA-44-CR-01
+  title: string;
+  leadAuthor: string;
+  institution: string;
+  date: string;
+  summary: string;
+  methodology: string;
+  keyFindings: string[];
+  sections: { title: string; content: string }[];
+  relatedDatasetIds: string[];
+  relatedMediaIds: string[];
+  downloadUrl?: string;
+}
+
 export interface Expedition {
   id: string;
   name: string;
   vesselOrTeam: string;
   leadScientist: string;
+  institution: string; // e.g. Ministry of Earth Sciences (MoES) / NCPOR
   startDate: string;
   endDate: string;
   status: 'Completed' | 'Ongoing' | 'Planned';
@@ -94,6 +127,13 @@ export interface Expedition {
   milestones: string[];
   findingsSummary: string;
   thumbnailUrl: string;
+  // Relationships per official specification
+  reportIds: string[];
+  publicationIds: string[];
+  datasetIds: string[];
+  mediaIds: string[];
+  activityIds: string[];
+  researchers: Researcher[];
 }
 
 export interface MediaItem {
@@ -104,12 +144,83 @@ export interface MediaItem {
   type: 'video' | 'photo' | 'audio';
   region: PolarRegion;
   creator: string;
+  institution: string;
   date: string;
   duration?: string;
   thumbnailUrl: string;
   mediaUrl: string;
   tags: string[];
   scientificContext: string;
+  // Metadata connections
+  relatedExpeditionId?: string;
+  relatedLocationId?: string;
+  relatedResearchId?: string;
+  relatedActivityId?: string;
+  resolution?: string;
+}
+
+export type ActivityType =
+  | 'Expedition'
+  | 'Conference'
+  | 'Research Event'
+  | 'Outreach Program'
+  | 'Announcement'
+  | 'Workshop'
+  | 'Scientific Achievement'
+  | 'Institutional Update';
+
+export interface InstitutionalActivity {
+  id: string;
+  title: string;
+  type: ActivityType;
+  institution: string; // e.g. Ministry of Earth Sciences (MoES)
+  date: string;
+  location: string;
+  summary: string;
+  description: string;
+  leadCoordinator: string;
+  participantsCount?: number;
+  status: 'Completed' | 'Ongoing' | 'Upcoming';
+  relatedExpeditionId?: string;
+  relatedPublicationIds?: string[];
+  relatedMediaIds?: string[];
+  badgeText?: string;
+}
+
+export type ReviewStatus = 'draft' | 'ai_generated' | 'under_review' | 'approved' | 'published';
+
+export type OutreachFormat =
+  | 'website_article'
+  | 'public_article'
+  | 'student_explanation'
+  | 'instagram_post'
+  | 'linkedin_post'
+  | 'x_post'
+  | 'youtube_description'
+  | 'video_script'
+  | 'infographic_content';
+
+export interface GeneratedOutreachItem {
+  id: string;
+  sourceId: string;
+  sourceTitle: string;
+  sourceType: 'Expedition Report' | 'Publication' | 'Dataset' | 'Activity' | 'Expedition';
+  sourceInstitution: string;
+  format: OutreachFormat;
+  formatLabel: string;
+  title: string;
+  content: string;
+  reviewStatus: ReviewStatus;
+  createdAt: string;
+  updatedAt: string;
+  attachedMediaIds: string[];
+  attachedDatasetId?: string;
+  reviewNotes?: string;
+  reviewedBy?: string;
+  publishedChannels: string[];
+  publishedAt?: string;
+  targetAudience: string;
+  readingLevel: string;
 }
 
 export interface ScienceStory {
@@ -126,6 +237,10 @@ export interface ScienceStory {
   readingLevel: string;
   createdDate: string;
   author: string;
+  reviewStatus?: ReviewStatus;
+  attachedMediaIds?: string[];
+  attachedDatasetId?: string;
+  sourceInstitution?: string;
 }
 
 export interface AISource {

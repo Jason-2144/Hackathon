@@ -4,16 +4,23 @@ import {
   RESEARCH_ITEMS,
   POLAR_DATASETS,
   EXPEDITIONS,
+  EXPEDITION_REPORTS,
   MEDIA_ITEMS,
-  DEMO_SCIENCE_STORIES
+  INSTITUTIONAL_ACTIVITIES,
+  DEMO_SCIENCE_STORIES,
+  DEMO_GENERATED_OUTREACH
 } from '../data/polarData';
 import {
   PolarLocation,
   ResearchItem,
   PolarDataset,
   Expedition,
+  ExpeditionReport,
   MediaItem,
-  ScienceStory
+  InstitutionalActivity,
+  ScienceStory,
+  GeneratedOutreachItem,
+  ReviewStatus
 } from '../types/polar';
 
 // 1. Supabase Client Configuration
@@ -30,14 +37,17 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
-// 2. Local Reactive Store for immediate, offline, and hackathon demo responsiveness
+// 2. Storage keys
 const STORAGE_KEYS = {
-  LOCATIONS: 'polaris_locations_v1',
-  RESEARCH: 'polaris_research_v1',
-  DATASETS: 'polaris_datasets_v1',
-  EXPEDITIONS: 'polaris_expeditions_v1',
-  MEDIA: 'polaris_media_v1',
-  STORIES: 'polaris_stories_v1',
+  LOCATIONS: 'polaris_locations_v2',
+  RESEARCH: 'polaris_research_v2',
+  DATASETS: 'polaris_datasets_v2',
+  EXPEDITIONS: 'polaris_expeditions_v2',
+  REPORTS: 'polaris_reports_v2',
+  MEDIA: 'polaris_media_v2',
+  ACTIVITIES: 'polaris_activities_v2',
+  STORIES: 'polaris_stories_v2',
+  OUTREACH: 'polaris_outreach_v2',
 };
 
 function getStoredOrInitial<T>(key: string, initial: T[]): T[] {
@@ -62,9 +72,8 @@ function saveToStore<T>(key: string, data: T[]) {
   }
 }
 
-// 3. Unified Polar Data Repository
+// 3. Unified Polar Science & Dissemination Repository
 export class PolarRepository {
-  // Listeners for live UI updates
   private static listeners: Array<() => void> = [];
 
   public static subscribe(fn: () => void) {
@@ -82,31 +91,25 @@ export class PolarRepository {
   public static getLocations(): PolarLocation[] {
     return getStoredOrInitial(STORAGE_KEYS.LOCATIONS, POLAR_LOCATIONS);
   }
-
   public static getLocationById(id: string): PolarLocation | undefined {
     return this.getLocations().find(loc => loc.id === id);
   }
-
   public static addLocation(newLoc: PolarLocation): void {
     const current = this.getLocations();
-    const updated = [newLoc, ...current];
-    saveToStore(STORAGE_KEYS.LOCATIONS, updated);
+    saveToStore(STORAGE_KEYS.LOCATIONS, [newLoc, ...current]);
     this.notify();
   }
 
-  // Research
+  // Research Publications
   public static getResearch(): ResearchItem[] {
     return getStoredOrInitial(STORAGE_KEYS.RESEARCH, RESEARCH_ITEMS);
   }
-
   public static getResearchById(id: string): ResearchItem | undefined {
     return this.getResearch().find(item => item.id === id);
   }
-
   public static addResearch(newResearch: ResearchItem): void {
     const current = this.getResearch();
-    const updated = [newResearch, ...current];
-    saveToStore(STORAGE_KEYS.RESEARCH, updated);
+    saveToStore(STORAGE_KEYS.RESEARCH, [newResearch, ...current]);
     this.notify();
   }
 
@@ -114,15 +117,12 @@ export class PolarRepository {
   public static getDatasets(): PolarDataset[] {
     return getStoredOrInitial(STORAGE_KEYS.DATASETS, POLAR_DATASETS);
   }
-
   public static getDatasetById(id: string): PolarDataset | undefined {
     return this.getDatasets().find(d => d.id === id);
   }
-
   public static addDataset(newDataset: PolarDataset): void {
     const current = this.getDatasets();
-    const updated = [newDataset, ...current];
-    saveToStore(STORAGE_KEYS.DATASETS, updated);
+    saveToStore(STORAGE_KEYS.DATASETS, [newDataset, ...current]);
     this.notify();
   }
 
@@ -130,11 +130,25 @@ export class PolarRepository {
   public static getExpeditions(): Expedition[] {
     return getStoredOrInitial(STORAGE_KEYS.EXPEDITIONS, EXPEDITIONS);
   }
-
+  public static getExpeditionById(id: string): Expedition | undefined {
+    return this.getExpeditions().find(exp => exp.id === id);
+  }
   public static addExpedition(newExp: Expedition): void {
     const current = this.getExpeditions();
-    const updated = [newExp, ...current];
-    saveToStore(STORAGE_KEYS.EXPEDITIONS, updated);
+    saveToStore(STORAGE_KEYS.EXPEDITIONS, [newExp, ...current]);
+    this.notify();
+  }
+
+  // Expedition Reports
+  public static getExpeditionReports(): ExpeditionReport[] {
+    return getStoredOrInitial(STORAGE_KEYS.REPORTS, EXPEDITION_REPORTS);
+  }
+  public static getExpeditionReportById(id: string): ExpeditionReport | undefined {
+    return this.getExpeditionReports().find(r => r.id === id);
+  }
+  public static addExpeditionReport(newReport: ExpeditionReport): void {
+    const current = this.getExpeditionReports();
+    saveToStore(STORAGE_KEYS.REPORTS, [newReport, ...current]);
     this.notify();
   }
 
@@ -142,24 +156,110 @@ export class PolarRepository {
   public static getMedia(): MediaItem[] {
     return getStoredOrInitial(STORAGE_KEYS.MEDIA, MEDIA_ITEMS);
   }
-
+  public static getMediaById(id: string): MediaItem | undefined {
+    return this.getMedia().find(m => m.id === id);
+  }
   public static addMedia(newMedia: MediaItem): void {
     const current = this.getMedia();
-    const updated = [newMedia, ...current];
-    saveToStore(STORAGE_KEYS.MEDIA, updated);
+    saveToStore(STORAGE_KEYS.MEDIA, [newMedia, ...current]);
     this.notify();
   }
 
-  // Stories ("Turn Science Into a Story")
+  // Institutional Activities
+  public static getActivities(): InstitutionalActivity[] {
+    return getStoredOrInitial(STORAGE_KEYS.ACTIVITIES, INSTITUTIONAL_ACTIVITIES);
+  }
+  public static getActivityById(id: string): InstitutionalActivity | undefined {
+    return this.getActivities().find(a => a.id === id);
+  }
+  public static addActivity(newAct: InstitutionalActivity): void {
+    const current = this.getActivities();
+    saveToStore(STORAGE_KEYS.ACTIVITIES, [newAct, ...current]);
+    this.notify();
+  }
+
+  // Stories
   public static getStories(): ScienceStory[] {
     return getStoredOrInitial(STORAGE_KEYS.STORIES, DEMO_SCIENCE_STORIES);
   }
-
   public static addStory(newStory: ScienceStory): void {
     const current = this.getStories();
-    const updated = [newStory, ...current];
-    saveToStore(STORAGE_KEYS.STORIES, updated);
+    saveToStore(STORAGE_KEYS.STORIES, [newStory, ...current]);
     this.notify();
+  }
+
+  // Generated Outreach Content & Review Workflow
+  public static getOutreachItems(): GeneratedOutreachItem[] {
+    return getStoredOrInitial(STORAGE_KEYS.OUTREACH, DEMO_GENERATED_OUTREACH);
+  }
+  public static getOutreachItemById(id: string): GeneratedOutreachItem | undefined {
+    return this.getOutreachItems().find(item => item.id === id);
+  }
+  public static addOutreachItem(item: GeneratedOutreachItem): void {
+    const current = this.getOutreachItems();
+    saveToStore(STORAGE_KEYS.OUTREACH, [item, ...current]);
+    this.notify();
+  }
+  public static updateOutreachStatus(
+    id: string,
+    status: ReviewStatus,
+    notes?: string,
+    channels?: string[]
+  ): void {
+    const current = this.getOutreachItems();
+    const updated = current.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          reviewStatus: status,
+          reviewNotes: notes !== undefined ? notes : item.reviewNotes,
+          publishedChannels: channels || item.publishedChannels,
+          publishedAt: status === 'published' ? new Date().toISOString().split('T')[0] : item.publishedAt,
+          updatedAt: new Date().toISOString().split('T')[0],
+        };
+      }
+      return item;
+    });
+    saveToStore(STORAGE_KEYS.OUTREACH, updated);
+    this.notify();
+  }
+  public static updateOutreachContent(id: string, title: string, content: string): void {
+    const current = this.getOutreachItems();
+    const updated = current.map(item => {
+      if (item.id === id) {
+        return {
+          ...item,
+          title,
+          content,
+          updatedAt: new Date().toISOString().split('T')[0],
+        };
+      }
+      return item;
+    });
+    saveToStore(STORAGE_KEYS.OUTREACH, updated);
+    this.notify();
+  }
+
+  // Deep Relational Resolver: get complete Expedition Bundle
+  public static getExpeditionBundle(expeditionId: string) {
+    const expedition = this.getExpeditionById(expeditionId);
+    if (!expedition) return null;
+
+    const reports = this.getExpeditionReports().filter(r => r.expeditionId === expedition.id || expedition.reportIds?.includes(r.id));
+    const publications = this.getResearch().filter(p => p.relatedExpeditionId === expedition.id || expedition.publicationIds?.includes(p.id));
+    const datasets = this.getDatasets().filter(d => d.relatedExpeditionId === expedition.id || expedition.datasetIds?.includes(d.id));
+    const media = this.getMedia().filter(m => m.relatedExpeditionId === expedition.id || expedition.mediaIds?.includes(m.id));
+    const activities = this.getActivities().filter(a => a.relatedExpeditionId === expedition.id || expedition.activityIds?.includes(a.id));
+
+    return {
+      expedition,
+      reports,
+      publications,
+      datasets,
+      media,
+      activities,
+      researchers: expedition.researchers || []
+    };
   }
 
   // Reset to seed data
@@ -168,8 +268,11 @@ export class PolarRepository {
     saveToStore(STORAGE_KEYS.RESEARCH, RESEARCH_ITEMS);
     saveToStore(STORAGE_KEYS.DATASETS, POLAR_DATASETS);
     saveToStore(STORAGE_KEYS.EXPEDITIONS, EXPEDITIONS);
+    saveToStore(STORAGE_KEYS.REPORTS, EXPEDITION_REPORTS);
     saveToStore(STORAGE_KEYS.MEDIA, MEDIA_ITEMS);
+    saveToStore(STORAGE_KEYS.ACTIVITIES, INSTITUTIONAL_ACTIVITIES);
     saveToStore(STORAGE_KEYS.STORIES, DEMO_SCIENCE_STORIES);
+    saveToStore(STORAGE_KEYS.OUTREACH, DEMO_GENERATED_OUTREACH);
     this.notify();
   }
 }
