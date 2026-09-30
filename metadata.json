@@ -1,0 +1,6 @@
+{
+  "name": "POLARIS — Polar Science Intelligence & Media Portal",
+  "description": "Explore the world's polar regions through science, datasets, satellite observations, interactive polar stereographic maps, AI-assisted research synthesis, and public storytelling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
